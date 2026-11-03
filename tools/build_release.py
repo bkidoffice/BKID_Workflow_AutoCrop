@@ -71,18 +71,18 @@ def main():
     build_rui()
     dist = ROOT / 'dist'
     dist.mkdir(exist_ok=True)
-    names = ('BKID_AutoCrop.py', 'BKID_AutoCrop.rui', 'assets/BKID_AutoCrop_Icon.svg')
+    names = ('BKID_AutoCrop.py', 'BKID_AutoCrop.rui', 'assets/BKID_AutoCrop_Icon.svg', 'assets/icon_32.png', 'Show_AutoCrop.py')
     payload = {name: base64.b64encode((PACKAGE / name).read_bytes()).decode('ascii') for name in names}
     source = (PACKAGE / 'Install_RunAutoCrop.py').read_text(encoding='utf-8')
     assert source.count('EMBEDDED_FILES = None') == 1
     standalone = source.replace('EMBEDDED_FILES = None', 'EMBEDDED_FILES = ' + json.dumps(payload, sort_keys=True))
     (dist / 'Install_BKID_AutoCrop.py').write_text(standalone, encoding='utf-8')
     (ROOT / 'Install_BKID_AutoCrop.py').write_text(standalone, encoding='utf-8')
-    with zipfile.ZipFile(dist / 'BKID_AutoCrop_1.2.1.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+    with zipfile.ZipFile(dist / 'BKID_AutoCrop_1.2.2.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
         for path in sorted(PACKAGE.rglob('*')):
             if path.is_file() and '__pycache__' not in path.parts:
                 archive.write(path, path.relative_to(ROOT))
-    print('Built dist/Install_BKID_AutoCrop.py and dist/BKID_AutoCrop_1.2.1.zip')
+    print('Built dist/Install_BKID_AutoCrop.py and dist/BKID_AutoCrop_1.2.2.zip')
 
 
 if __name__ == '__main__':

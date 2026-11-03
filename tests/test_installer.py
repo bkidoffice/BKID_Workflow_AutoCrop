@@ -6,7 +6,7 @@ import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 import xml.etree.ElementTree as ET
 from PIL import Image
 
@@ -38,7 +38,19 @@ class ToolbarHost:
             if not self.refuse_close:
                 self.CloseToolbarCollection(self.open[path], prompt)
             return self.close_result
-        return SimpleNamespace(Close=close)
+        host = self
+        class Group:
+            Name = 'BKID AutoCrop'
+            @property
+            def Visible(self): return not host.fail_show and host.open.get(path) in host.visible
+            @Visible.setter
+            def Visible(self, value):
+                if value and not host.fail_show: host.visible.add(host.open[path])
+        return SimpleNamespace(Close=close, GetGroup=lambda key: Group(), GroupCount=1)
+
+    def Open(self, path):
+        self.OpenToolbarCollection(path)
+        return self.FindByPath(path)
 
     def IsAlias(self, name): return name in self.aliases
     def AliasMacro(self, name, value=None):
@@ -74,6 +86,7 @@ class InstallerTests(unittest.TestCase):
         rhino = SimpleNamespace(RhinoApp=SimpleNamespace(Version=SimpleNamespace(Major=8), WriteLine=self.log.append, ToolbarFiles=self.host))
         self.mods = {'System': system, 'Rhino': rhino, 'rhinoscriptsyntax': self.host}
         self.module = load(ROOT / 'dist/Install_BKID_AutoCrop.py')
+        self.module.show_logo_window = Mock(side_effect=RuntimeError('UI unavailable'))
 
     def install(self):
         with patch.dict(sys.modules, self.mods), patch.object(sys, 'platform', 'cli'), patch.object(sys, 'version_info', (2, 7)):
@@ -153,6 +166,59 @@ class InstallerTests(unittest.TestCase):
             self.install()
         self.assertEqual((folder / 'BKID_AutoCrop.rui').read_bytes(), old)
         self.assertEqual(len(self.host.open), 1)
+
+    def test_native_show_does_not_use_name_based_lookup(self):
+        self.host.ShowToolbar = lambda *args: False
+        self.install()
+        self.module.show_logo_window.assert_not_called()
+
+    def test_native_failure_opens_logo_window_and_keeps_commands(self):
+        self.host.fail_show = True
+        self.module.show_logo_window.side_effect = None
+        folder = self.install()
+        self.module.show_logo_window.assert_called_once_with(str(folder))
+        self.assertIn('RunAutoCrop', self.host.aliases)
+        self.assertIn('ShowAutoCrop', self.host.aliases)
+        self.assertTrue((folder / 'assets/icon_32.png').is_file())
+
+    def test_logo_window_lifetime_click_and_reopen(self):
+        class Event:
+            def __init__(self): self.handlers = []
+            def __iadd__(self, handler): self.handlers.append(handler); return self
+            def fire(self):
+                for handler in self.handlers: handler(None, None)
+        class Form:
+            def __init__(self):
+                self.Closed = Event()
+                self.front = 0
+            def Show(self): self.shown = True
+            def BringToFront(self): self.front += 1
+        class Button:
+            def __init__(self): self.Click = Event()
+        class Bitmap:
+            def __init__(self, path): self.path = path; self.disposed = False
+            def Dispose(self): self.disposed = True
+        forms = SimpleNamespace(Form=Form, Button=Button)
+        drawing = SimpleNamespace(Bitmap=Bitmap, Padding=lambda n: n, Size=lambda *n: n)
+        rhino = self.mods['Rhino']
+        rhino.UI = SimpleNamespace(RhinoEtoApp=SimpleNamespace(MainWindow=object()))
+        rhino.RhinoApp.RunScript = Mock(return_value=True)
+        sticky = {}
+        modules = dict(self.mods, Eto=SimpleNamespace(Forms=forms, Drawing=drawing),
+                       scriptcontext=SimpleNamespace(sticky=sticky))
+        modules.update({'Eto.Forms': forms, 'Eto.Drawing': drawing})
+        with patch.dict(sys.modules, modules):
+            launcher = load(ROOT / 'BKID_AutoCrop/Show_AutoCrop.py')
+            form = launcher.show()
+            self.assertTrue(form.shown)
+            self.assertIs(launcher.show(), form)
+            self.assertEqual(form.front, 1)
+            form.Content.Click.fire()
+            rhino.RhinoApp.RunScript.assert_called_once_with('! RunAutoCrop', False)
+            form.Closed.fire()
+            self.assertFalse(sticky)
+            self.assertTrue(form.Content.Image.disposed)
+            self.assertIsNot(launcher.show(), form)
 
     def test_toolbar_icon_and_macro_references(self):
         rui = ET.parse(ROOT / 'BKID_AutoCrop/BKID_AutoCrop.rui').getroot()

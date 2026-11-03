@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Installer 1.2.1. Install with Windows Rhino 6/8 _RunPythonScript (IronPython 2.7)."""
+"""Installer 1.2.2. Install with Windows Rhino 6/8 _RunPythonScript (IronPython 2.7)."""
 import base64
 import os
 import shutil
@@ -10,7 +10,7 @@ import traceback
 # The release builder replaces this marker with the complete embedded payload.
 EMBEDDED_FILES = None
 MANAGED_FILES = ("BKID_AutoCrop.py", "BKID_AutoCrop.rui",
-                 "assets/BKID_AutoCrop_Icon.svg")
+                 "assets/BKID_AutoCrop_Icon.svg", "assets/icon_32.png", "Show_AutoCrop.py")
 
 
 def payload():
@@ -42,6 +42,29 @@ def close_toolbar(path, toolbar_files):
         raise RuntimeError(u"BKID 툴바 파일이 아직 열려 있습니다. Rhino를 다시 시작한 뒤 설치해 주세요.")
 
 
+def show_native_toolbar(path, toolbar_files):
+    toolbar = toolbar_files.FindByPath(path)
+    if toolbar is None:
+        toolbar = toolbar_files.Open(path)
+    if toolbar is None:
+        raise RuntimeError("Toolbar file could not be opened: " + path)
+    group = toolbar.GetGroup("BKID AutoCrop")
+    if group is None:
+        names = [toolbar.GetGroup(i).Name for i in range(toolbar.GroupCount)]
+        raise RuntimeError("BKID AutoCrop group missing; loaded groups: " + repr(names))
+    group.Visible = True
+    if not group.Visible:
+        raise RuntimeError("Rhino did not make the toolbar group visible")
+
+
+def show_logo_window(folder):
+    path = os.path.join(folder, "Show_AutoCrop.py")
+    scope = {"__file__": path, "__name__": "__main__"}
+    with open(path, "rb") as stream:
+        code = compile(stream.read(), path, "exec")
+    eval(code, scope)
+
+
 def install():
     if sys.platform != "cli" or sys.version_info[0] != 2:
         raise RuntimeError(u"Windows Rhino의 _RunPythonScript로 실행해 주세요 (IronPython 2.7).")
@@ -62,6 +85,7 @@ def install():
     rui = os.path.join(folder, "BKID_AutoCrop.rui")
     backup = tempfile.mkdtemp(prefix="BKID_AutoCrop_backup_")
     old_alias = rs.AliasMacro("RunAutoCrop") if rs.IsAlias("RunAutoCrop") else None
+    old_launcher_alias = rs.AliasMacro("ShowAutoCrop") if rs.IsAlias("ShowAutoCrop") else None
     old_collection = rs.IsToolbarCollection(rui)
     toolbar_changed = not same_file(rui, files["BKID_AutoCrop.rui"])
     closed = False
@@ -95,13 +119,21 @@ def install():
             rs.AddAlias("RunAutoCrop", macro)
         if rs.AliasMacro("RunAutoCrop") != macro:
             raise RuntimeError(u"RunAutoCrop 명령 등록에 실패했습니다.")
-        collection = rs.IsToolbarCollection(rui) or rs.OpenToolbarCollection(rui)
-        if not collection:
-            raise RuntimeError(u"로고 툴바를 열지 못했습니다.")
-        if not rs.ShowToolbar(collection, "BKID AutoCrop"):
-            raise RuntimeError(u"BKID AutoCrop 툴바를 표시하지 못했습니다.")
-        if not rs.IsToolbarVisible(collection, "BKID AutoCrop"):
-            raise RuntimeError(u"툴바 표시 상태를 확인하지 못했습니다.")
+        launcher_macro = u'! _-RunPythonScript "{0}"'.format(os.path.join(folder, "Show_AutoCrop.py"))
+        if rs.IsAlias("ShowAutoCrop"):
+            rs.AliasMacro("ShowAutoCrop", launcher_macro)
+        else:
+            rs.AddAlias("ShowAutoCrop", launcher_macro)
+        if rs.AliasMacro("ShowAutoCrop") != launcher_macro:
+            raise RuntimeError("ShowAutoCrop alias registration failed")
+        try:
+            show_native_toolbar(rui, Rhino.RhinoApp.ToolbarFiles)
+        except Exception:
+            Rhino.RhinoApp.WriteLine("Native toolbar unavailable; trying logo window. Details:")
+            Rhino.RhinoApp.WriteLine(traceback.format_exc())
+            show_logo_window(folder)
+            Rhino.RhinoApp.WriteLine(u"기본 툴바 대신 별도 로고 창을 표시했습니다. 다시 열기: ShowAutoCrop")
+
     except Exception:
         # Restore only files and the alias this installer owns.
         try:
@@ -120,6 +152,11 @@ def install():
                     rs.DeleteAlias("RunAutoCrop")
             else:
                 rs.AliasMacro("RunAutoCrop", old_alias)
+            if old_launcher_alias is None:
+                if rs.IsAlias("ShowAutoCrop"):
+                    rs.DeleteAlias("ShowAutoCrop")
+            else:
+                rs.AliasMacro("ShowAutoCrop", old_launcher_alias)
             if old_collection and closed:
                 restored = rs.OpenToolbarCollection(rui)
                 if not restored:
@@ -132,7 +169,7 @@ def install():
     finally:
         if backup is not None:
             shutil.rmtree(backup)
-    Rhino.RhinoApp.WriteLine(u"설치 완료 (1.2.1): 로고 버튼을 클릭하거나 RunAutoCrop을 입력하세요.")
+    Rhino.RhinoApp.WriteLine(u"설치 완료 (1.2.2): 로고 버튼을 클릭하거나 RunAutoCrop을 입력하세요.")
     Rhino.RhinoApp.WriteLine(u"설치 위치: {0}".format(folder))
     Rhino.RhinoApp.WriteLine(u"다운로드한 설치 파일은 이제 이동하거나 삭제해도 됩니다.")
     return folder

@@ -2,7 +2,7 @@
 
 Windows Rhino용 자동 투명 PNG 캡처 실행 스크립트입니다. 컴파일된 .rhp 플러그인이 아닌 버튼 등록형 Python 도구입니다.
 
-## 간편 설치 — 설치 도구 1.2.1
+## 간편 설치 — 설치 도구 1.2.2
 
 1. 저장소 첫 화면의 `Install_BKID_AutoCrop.py`를 **Raw 파일로 다운로드**합니다. 이 파일 하나에 캡처 스크립트와 로고 툴바가 포함되어 있습니다.
 2. Windows Rhino 명령창에서 `_RunPythonScript`를 입력하고 다운로드한 파일을 선택합니다.
@@ -88,9 +88,9 @@ GitHub 본문 직접 열기는 검색 도구에서 실패하여, McNeel 포럼�
 
 Rhino 8의 IronPython 지원 공식 설명: https://developer.rhino3d.com/guides/rhinopython/python-3-in-rhino/
 
-## 설치 도구 1.2.1 검증
+## 설치 도구 1.2.2 검증
 
-- 클라우드 모의 Rhino 호스트에서 9개 자동 테스트 통과: 단일 파일 설치·재설치·이동, 업데이트 실패 복원, 첫 설치 실패 정리, 누락 패키지 보호, Rhino 6/8 설치 경로 분리, RUI 매크로·아이콘 참조와 PNG 크기·투명도.
+- 클라우드 모의 Rhino 호스트에서 12개 자동 테스트 통과: 단일 파일 설치·재설치·이동, 업데이트 실패 복원, 첫 설치 실패 정리, 누락 패키지 보호, Rhino 6/8 설치 경로 분리, RUI 매크로·아이콘 참조와 PNG 크기·투명도.
 - RUI XML 구조 검사와 Python 문법 검사를 수행했습니다. 이 검사는 Rhino 자체의 RUI 로딩 검증을 대신하지 않습니다.
 - Windows Rhino 6/8에서 설치 실행, 로고 표시, 버튼 클릭 캡처, 재시작 후 유지, 한글 사용자 경로는 **미실행**입니다. 캡처 엔진의 실기 검증 상태도 위 표와 같습니다.
 
@@ -111,3 +111,13 @@ Python 3에서 `python -m pip install CairoSVG==2.8.2 Pillow` 후 저장소 루�
 기존 툴바를 닫지 못했다는 오류를 줄이기 위해, 설치할 RUI와 기존 파일이 같으면 열린 툴바를 재사용합니다. RUI 교체 시에는 이름 기반 `CloseToolbarCollection` 대신 공식 `RhinoApp.ToolbarFiles.FindByPath`로 찾은 파일을 닫고, 반환값 대신 경로 재조회로 닫힘 여부를 확인합니다. 실제로 파일이 계속 열려 있으면 기존 파일을 덮어쓰지 않고 재시작 안내를 표시합니다.
 
 추가 모의 테스트: 닫기가 거부되는 환경의 동일 툴바 재설치, 반환값 없는 닫기 후 교체, 실제 닫기 거부 시 기존 파일 보존. Windows Rhino 8에서 사용자가 보고한 오류에 대응한 수정이며 실제 Rhino 재실행 검증은 아직 필요합니다.
+
+### 1.2.2 툴바 표시 및 대체 로고 창
+
+`ShowToolbar`의 이름 기반 조회 대신 `ToolbarFiles.FindByPath`에서 얻은 정확한 파일 객체의 `GetGroup`과 `Visible`을 사용합니다. 그룹이 없으면 실제로 로드된 그룹 이름과 오류 상세를 F2 기록에 출력합니다. 실제 사용자 오류만으로는 이름 조회 실패인지 Rhino 8의 그룹 로드 문제인지 확정할 수 없습니다.
+
+기본 툴바 표시가 실패하면 첨부 로고 PNG가 들어간 Eto 모델리스 버튼 창을 표시합니다. 이는 도킹 가능한 기본 Rhino 툴바와 다른 창입니다. 닫거나 Rhino를 재시작한 경우 `ShowAutoCrop`을 입력하면 다시 열립니다. 버튼은 등록된 `RunAutoCrop` 명령을 실행합니다. 대체 창까지 표시하지 못하면 설치 실패로 처리하고 기존 파일과 별칭을 복원합니다.
+
+McNeel 공식 저장소의 `rhinopython/SampleEtoModelessForm.py`에서 Form.Owner/Show, scriptcontext.sticky를 통한 수명 유지, 버튼 이벤트의 RhinoApp.RunScript 호출 흐름을 확인했습니다. 해당 예제의 Python 3 전용 문법을 복제하지 않고 IronPython 2.7 호환 코드로 작성했습니다.
+
+모의 테스트 12개 통과. 추가 검증은 이름 기반 조회 없이 기본 툴바 표시, 기본 툴바 실패 시 대체 창 호출 및 명령 유지, 로고 창 중복 방지·클릭·닫기·재열기를 포함합니다. Windows Rhino 6/8에서 기본 툴바와 Eto 창의 실기 검증은 여전히 미실행입니다.
