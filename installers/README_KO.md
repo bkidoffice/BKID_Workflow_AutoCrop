@@ -39,4 +39,4 @@
 
 오류는 F2 기록의 `BKID AutoCrop toolbar startup:` 또는 설치 프로그램 오류 창과 백업 경로를 확인하세요.
 
-설치 마법사 왼쪽에는 제공된 `Workflowboost_download.png` 원본을 내장해 전체 비율로 표시합니다. 원본 파일은 `BKID_AutoCrop/assets/WizardImage.png`에 보존하며 설치 EXE에 같은 바이트가 포함되는지 빌드 과정에서 검사합니다. 툴바 버튼에는 기존 AutoCrop 로고가 적용됩니다.
+설치 마법사 왼쪽에는 제공된 `Workflowboost_download.png` 원본을 내장해 전체 비율로 표시합니다. 이미지 패널의 안쪽 여백은 0이며, 패널 크기를 원본 비율에 맞춰 위·옆에 별도 검은 띠가 생기지 않도록 조정했습니다. 원본 파일은 `BKID_AutoCrop/assets/WizardImage.png`에 보존하며 설치 EXE에 같은 바이트가 포함되는지 빌드 과정에서 검사합니다. 툴바 버튼에는 기존 AutoCrop 로고가 적용됩니다.

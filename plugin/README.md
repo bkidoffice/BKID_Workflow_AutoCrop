@@ -48,4 +48,4 @@ Windows Rhino 6 and 8: replace an existing installation through EXE, native inst
 
 ## Wizard artwork
 
-`BKID_AutoCrop/assets/WizardImage.png` is the unmodified PNG provided in `Workflowboost_download.zip` (2500 × 3334). Setup embeds it and displays it with PictureBox Zoom in the left artwork panel, preserving the full image and aspect ratio. The metadata verifier compares embedded artwork bytes against this source. The toolbar icon remains the separate AutoCrop icon. The actual Windows wizard appearance remains untested on this Linux machine.
+`BKID_AutoCrop/assets/WizardImage.png` is the unmodified PNG provided in `Workflowboost_download.zip` (2500 × 3334). Setup embeds it and displays it edge to edge in the left artwork panel. The panel has zero padding and its width follows the source aspect ratio at the current client height; StretchImage fills the remaining subpixel rounding gap without cropping the artwork. The metadata verifier compares embedded artwork bytes against this source. The toolbar icon remains the separate AutoCrop icon. The actual Windows wizard appearance remains untested on this Linux machine.

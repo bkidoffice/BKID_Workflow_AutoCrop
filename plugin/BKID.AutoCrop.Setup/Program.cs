@@ -65,18 +65,21 @@ namespace BKID.AutoCrop.Setup
             var artwork = new Panel
             {
                 Dock = DockStyle.Left,
-                Width = 300,
-                Padding = new Padding(8),
+                Width = (int)Math.Round(ClientSize.Height * (double)logo.Width / logo.Height),
+                Padding = new Padding(0),
                 BackColor = Color.FromArgb(6, 8, 14)
             };
             artwork.Controls.Add(new PictureBox
             {
                 Image = logo,
                 Dock = DockStyle.Fill,
-                SizeMode = PictureBoxSizeMode.Zoom
+                SizeMode = PictureBoxSizeMode.StretchImage
             });
             Controls.Add(content);
             Controls.Add(artwork);
+            // Keep the panel at the image aspect ratio, including after DPI scaling.
+            ClientSizeChanged += (sender, args) =>
+                artwork.Width = (int)Math.Round(ClientSize.Height * (double)logo.Width / logo.Height);
             status.Text = "Rhino를 종료한 뒤 설치하세요.\r\n기존 BKID 설치를 백업·제거하고 새 툴바 버전을 설치합니다.\r\nRhino Installer에서는 현재 사용자 설치를 선택하세요.";
             install.Click += InstallClicked;
             FormClosing += (sender, args) => { if (busy) args.Cancel = true; };
