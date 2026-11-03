@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Install with Windows Rhino 6/8 _RunPythonScript (IronPython 2.7)."""
+"""Installer 1.2.1. Install with Windows Rhino 6/8 _RunPythonScript (IronPython 2.7)."""
 import base64
 import os
 import shutil
@@ -25,6 +25,23 @@ def payload():
     return result
 
 
+def same_file(path, content):
+    if not os.path.isfile(path):
+        return False
+    with open(path, "rb") as stream:
+        return stream.read() == content
+
+
+def close_toolbar(path, toolbar_files):
+    """Use the exact file handle; verify state instead of trusting Close's return."""
+    toolbar = toolbar_files.FindByPath(path)
+    if toolbar is None:
+        return
+    toolbar.Close(False)
+    if toolbar_files.FindByPath(path) is not None:
+        raise RuntimeError(u"BKID 툴바 파일이 아직 열려 있습니다. Rhino를 다시 시작한 뒤 설치해 주세요.")
+
+
 def install():
     if sys.platform != "cli" or sys.version_info[0] != 2:
         raise RuntimeError(u"Windows Rhino의 _RunPythonScript로 실행해 주세요 (IronPython 2.7).")
@@ -46,6 +63,7 @@ def install():
     backup = tempfile.mkdtemp(prefix="BKID_AutoCrop_backup_")
     old_alias = rs.AliasMacro("RunAutoCrop") if rs.IsAlias("RunAutoCrop") else None
     old_collection = rs.IsToolbarCollection(rui)
+    toolbar_changed = not same_file(rui, files["BKID_AutoCrop.rui"])
     closed = False
     written = []
     try:
@@ -57,12 +75,13 @@ def install():
                 if not os.path.isdir(parent):
                     os.makedirs(parent)
                 shutil.copy2(target, saved)
-        if old_collection:
-            if not rs.CloseToolbarCollection(old_collection, False):
-                raise RuntimeError(u"기존 BKID 툴바를 닫을 수 없습니다. 다시 시도해 주세요.")
+        if old_collection and toolbar_changed:
+            close_toolbar(rui, Rhino.RhinoApp.ToolbarFiles)
             closed = True
         for name in MANAGED_FILES:
             target = os.path.join(folder, *name.split('/'))
+            if same_file(target, files[name]):
+                continue
             parent = os.path.dirname(target)
             if not os.path.isdir(parent):
                 os.makedirs(parent)
@@ -76,7 +95,7 @@ def install():
             rs.AddAlias("RunAutoCrop", macro)
         if rs.AliasMacro("RunAutoCrop") != macro:
             raise RuntimeError(u"RunAutoCrop 명령 등록에 실패했습니다.")
-        collection = rs.OpenToolbarCollection(rui)
+        collection = rs.IsToolbarCollection(rui) or rs.OpenToolbarCollection(rui)
         if not collection:
             raise RuntimeError(u"로고 툴바를 열지 못했습니다.")
         if not rs.ShowToolbar(collection, "BKID AutoCrop"):
@@ -87,9 +106,8 @@ def install():
         # Restore only files and the alias this installer owns.
         try:
             current = rs.IsToolbarCollection(rui)
-            if current and (written or closed):
-                if not rs.CloseToolbarCollection(current, False):
-                    raise RuntimeError("Cannot close toolbar for rollback")
+            if current and ("BKID_AutoCrop.rui" in written or closed):
+                close_toolbar(rui, Rhino.RhinoApp.ToolbarFiles)
             for name in written:
                 target = os.path.join(folder, *name.split('/'))
                 saved = os.path.join(backup, *name.split('/'))
@@ -114,7 +132,7 @@ def install():
     finally:
         if backup is not None:
             shutil.rmtree(backup)
-    Rhino.RhinoApp.WriteLine(u"설치 완료: 로고 버튼을 클릭하거나 RunAutoCrop을 입력하세요.")
+    Rhino.RhinoApp.WriteLine(u"설치 완료 (1.2.1): 로고 버튼을 클릭하거나 RunAutoCrop을 입력하세요.")
     Rhino.RhinoApp.WriteLine(u"설치 위치: {0}".format(folder))
     Rhino.RhinoApp.WriteLine(u"다운로드한 설치 파일은 이제 이동하거나 삭제해도 됩니다.")
     return folder

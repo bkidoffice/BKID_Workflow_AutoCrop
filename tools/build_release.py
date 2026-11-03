@@ -78,11 +78,11 @@ def main():
     standalone = source.replace('EMBEDDED_FILES = None', 'EMBEDDED_FILES = ' + json.dumps(payload, sort_keys=True))
     (dist / 'Install_BKID_AutoCrop.py').write_text(standalone, encoding='utf-8')
     (ROOT / 'Install_BKID_AutoCrop.py').write_text(standalone, encoding='utf-8')
-    with zipfile.ZipFile(dist / 'BKID_AutoCrop_1.2.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
+    with zipfile.ZipFile(dist / 'BKID_AutoCrop_1.2.1.zip', 'w', zipfile.ZIP_DEFLATED) as archive:
         for path in sorted(PACKAGE.rglob('*')):
             if path.is_file() and '__pycache__' not in path.parts:
                 archive.write(path, path.relative_to(ROOT))
-    print('Built dist/Install_BKID_AutoCrop.py and dist/BKID_AutoCrop_1.2.zip')
+    print('Built dist/Install_BKID_AutoCrop.py and dist/BKID_AutoCrop_1.2.1.zip')
 
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@
 
 Windows Rhino용 자동 투명 PNG 캡처 실행 스크립트입니다. 컴파일된 .rhp 플러그인이 아닌 버튼 등록형 Python 도구입니다.
 
-## 간편 설치 — 설치 도구 1.2
+## 간편 설치 — 설치 도구 1.2.1
 
 1. 저장소 첫 화면의 `Install_BKID_AutoCrop.py`를 **Raw 파일로 다운로드**합니다. 이 파일 하나에 캡처 스크립트와 로고 툴바가 포함되어 있습니다.
 2. Windows Rhino 명령창에서 `_RunPythonScript`를 입력하고 다운로드한 파일을 선택합니다.
@@ -88,9 +88,9 @@ GitHub 본문 직접 열기는 검색 도구에서 실패하여, McNeel 포럼�
 
 Rhino 8의 IronPython 지원 공식 설명: https://developer.rhino3d.com/guides/rhinopython/python-3-in-rhino/
 
-## 설치 도구 1.2 검증
+## 설치 도구 1.2.1 검증
 
-- 클라우드 모의 Rhino 호스트에서 6개 자동 테스트 통과: 단일 파일 설치·재설치·이동, 업데이트 실패 복원, 첫 설치 실패 정리, 누락 패키지 보호, Rhino 6/8 설치 경로 분리, RUI 매크로·아이콘 참조와 PNG 크기·투명도.
+- 클라우드 모의 Rhino 호스트에서 9개 자동 테스트 통과: 단일 파일 설치·재설치·이동, 업데이트 실패 복원, 첫 설치 실패 정리, 누락 패키지 보호, Rhino 6/8 설치 경로 분리, RUI 매크로·아이콘 참조와 PNG 크기·투명도.
 - RUI XML 구조 검사와 Python 문법 검사를 수행했습니다. 이 검사는 Rhino 자체의 RUI 로딩 검증을 대신하지 않습니다.
 - Windows Rhino 6/8에서 설치 실행, 로고 표시, 버튼 클릭 캡처, 재시작 후 유지, 한글 사용자 경로는 **미실행**입니다. 캡처 엔진의 실기 검증 상태도 위 표와 같습니다.
 
@@ -105,3 +105,9 @@ Python 3에서 `python -m pip install CairoSVG==2.8.2 Pillow` 후 저장소 루�
 - McNeel 공식 [rhinoscriptsyntax toolbar.py](https://github.com/mcneel/rhinoscriptsyntax/blob/master/Scripts/rhinoscript/toolbar.py)의 `OpenToolbarCollection`, `CloseToolbarCollection`, `ShowToolbar`, `IsToolbarVisible` 구현을 확인했습니다. 이 함수들은 RhinoApp.ToolbarFiles와 그룹 Visible을 사용합니다.
 - McNeel 공식 [SampleShowToolbarGroup.py](https://github.com/mcneel/rhino-developer-samples/blob/master/rhinopython/SampleShowToolbarGroup.py)의 컬렉션 로드 → 그룹 조회 → 표시 흐름을 확인했습니다(MIT).
 - [COMPAS v0.19.3의 rui.py](https://github.com/compas-dev/compas/blob/v0.19.3/src/compas_rhino/ui/rui.py)에서 RhinoUI 2.0의 매크로·툴바·그룹과 PNG 비트맵 슬롯 구조를 확인했습니다. 생성기는 이 파일의 코드를 복제하지 않고 프로젝트에 맞게 작성했습니다. COMPAS의 MIT 라이선스는 저장소 LICENSE에서 확인했습니다.
+
+### 1.2.1 설치 오류 수정
+
+기존 툴바를 닫지 못했다는 오류를 줄이기 위해, 설치할 RUI와 기존 파일이 같으면 열린 툴바를 재사용합니다. RUI 교체 시에는 이름 기반 `CloseToolbarCollection` 대신 공식 `RhinoApp.ToolbarFiles.FindByPath`로 찾은 파일을 닫고, 반환값 대신 경로 재조회로 닫힘 여부를 확인합니다. 실제로 파일이 계속 열려 있으면 기존 파일을 덮어쓰지 않고 재시작 안내를 표시합니다.
+
+추가 모의 테스트: 닫기가 거부되는 환경의 동일 툴바 재설치, 반환값 없는 닫기 후 교체, 실제 닫기 거부 시 기존 파일 보존. Windows Rhino 8에서 사용자가 보고한 오류에 대응한 수정이며 실제 Rhino 재실행 검증은 아직 필요합니다.

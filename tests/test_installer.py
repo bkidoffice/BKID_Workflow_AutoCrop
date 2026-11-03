@@ -26,6 +26,19 @@ class ToolbarHost:
         self.open = {}
         self.visible = set()
         self.fail_show = False
+        self.close_calls = 0
+        self.refuse_close = False
+        self.close_result = None
+
+    def FindByPath(self, path):
+        if path not in self.open:
+            return None
+        def close(prompt):
+            self.close_calls += 1
+            if not self.refuse_close:
+                self.CloseToolbarCollection(self.open[path], prompt)
+            return self.close_result
+        return SimpleNamespace(Close=close)
 
     def IsAlias(self, name): return name in self.aliases
     def AliasMacro(self, name, value=None):
@@ -58,7 +71,7 @@ class InstallerTests(unittest.TestCase):
         system = SimpleNamespace(Environment=SimpleNamespace(
             OSVersion=SimpleNamespace(Platform=1), SpecialFolder=SimpleNamespace(ApplicationData=1),
             GetFolderPath=lambda unused: self.temp.name), PlatformID=SimpleNamespace(Win32NT=1))
-        rhino = SimpleNamespace(RhinoApp=SimpleNamespace(Version=SimpleNamespace(Major=8), WriteLine=self.log.append))
+        rhino = SimpleNamespace(RhinoApp=SimpleNamespace(Version=SimpleNamespace(Major=8), WriteLine=self.log.append, ToolbarFiles=self.host))
         self.mods = {'System': system, 'Rhino': rhino, 'rhinoscriptsyntax': self.host}
         self.module = load(ROOT / 'dist/Install_BKID_AutoCrop.py')
 
@@ -113,6 +126,33 @@ class InstallerTests(unittest.TestCase):
         folder6 = self.install()
         self.assertNotEqual(folder8, folder6)
         self.assertEqual(folder6.name, 'Rhino6')
+
+    def test_identical_toolbar_is_reused_even_when_close_is_refused(self):
+        folder = self.install()
+        self.host.refuse_close = True
+        # Reproduce the original name-based API failure.
+        self.host.CloseToolbarCollection = lambda *args: False
+        self.assertEqual(self.install(), folder)
+        self.assertEqual(self.host.close_calls, 0)
+
+    def test_changed_toolbar_closes_by_path_with_void_return(self):
+        folder = self.install()
+        (folder / 'BKID_AutoCrop.rui').write_bytes(b'<RhinoUI />')
+        self.host.close_result = None
+        self.install()
+        self.assertEqual(self.host.close_calls, 1)
+        self.assertEqual((folder / 'BKID_AutoCrop.rui').read_bytes(),
+                         (ROOT / 'BKID_AutoCrop/BKID_AutoCrop.rui').read_bytes())
+
+    def test_close_refusal_preserves_previous_install(self):
+        folder = self.install()
+        old = b'<RhinoUI />'
+        (folder / 'BKID_AutoCrop.rui').write_bytes(old)
+        self.host.refuse_close = True
+        with self.assertRaisesRegex(RuntimeError, 'Rhino'):
+            self.install()
+        self.assertEqual((folder / 'BKID_AutoCrop.rui').read_bytes(), old)
+        self.assertEqual(len(self.host.open), 1)
 
     def test_toolbar_icon_and_macro_references(self):
         rui = ET.parse(ROOT / 'BKID_AutoCrop/BKID_AutoCrop.rui').getroot()
