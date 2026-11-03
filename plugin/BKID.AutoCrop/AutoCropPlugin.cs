@@ -13,6 +13,7 @@ namespace BKID.AutoCrop
     [Guid("3881C10B-30A8-4FE5-BB48-9E53A6FEA1F4")]
     public sealed class AutoCropPlugin : PlugIn
     {
+        private const string ToolbarInitializedKey = "NativeToolbarInitialized";
         private bool waitingForStartup;
         private int startupAttempts;
         public static AutoCropPlugin Instance { get; private set; }
@@ -22,8 +23,12 @@ namespace BKID.AutoCrop
 
         protected override LoadReturnCode OnLoad(ref string errorMessage)
         {
-            waitingForStartup = true;
-            RhinoApp.Idle += OnStartupIdle;
+            // Afterwards Rhino restores the user's docking and visibility state.
+            if (!Settings.GetBool(ToolbarInitializedKey, false))
+            {
+                waitingForStartup = true;
+                RhinoApp.Idle += OnStartupIdle;
+            }
             return LoadReturnCode.Success;
         }
 
@@ -88,12 +93,15 @@ namespace BKID.AutoCrop
             }
             group.Visible = true;
             if (!group.Visible) throw new InvalidOperationException("Rhino did not display the AutoCrop toolbar group.");
+            // Mark only successful initialization; failed first starts can retry.
+            Settings.SetBool(ToolbarInitializedKey, true);
+            StopWaitingForStartup();
         }
 
         internal string PrepareCaptureScript()
         {
             var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                                      "BKID", "AutoCrop", "runtime", "2.1.0");
+                                      "BKID", "AutoCrop", "runtime", "2.2.0");
             Directory.CreateDirectory(folder);
             var target = Path.Combine(folder, "BKID_AutoCrop.py");
             using (var input = Assembly.GetExecutingAssembly().GetManifestResourceStream("BKID.AutoCrop.Capture.py"))
