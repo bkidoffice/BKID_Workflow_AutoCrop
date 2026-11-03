@@ -27,9 +27,9 @@ def build():
                          dock_bar_guid32='00000000-0000-0000-0000-000000000000',
                          dock_bar_guid64=guid('dock'), active_tool_bar_group=guid('toolbar'),
                          single_file='False', hide_single_tab='True', point_floating='150,150')
-    label(group, 'text', 'BKID AutoCrop')
+    label(group, 'text', 'BKID Workflowboost')
     item = E.SubElement(group, 'tool_bar_group_item', guid=guid('toolbar'), major_version='1', minor_version='1')
-    label(item, 'text', 'BKID AutoCrop')
+    label(item, 'text', 'BKID Workflowboost')
     E.SubElement(item, 'tool_bar_id').text = guid('toolbar')
     E.SubElement(group, 'dock_bar_info', dpi_scale='100', dock_bar='False', docking='True',
                  horz='True', visible='True', floating='True', mru_float_style='8192',
@@ -37,7 +37,7 @@ def build():
                  rect_mru_dock_pos='0,0,100,70', dock_location_u='0', dock_location='top', float_size='100,70')
     bars = E.SubElement(r, 'tool_bars')
     bar = E.SubElement(bars, 'tool_bar', guid=guid('toolbar'), bitmap_id=guid('icon'), item_display_style='control_only')
-    label(bar, 'text', 'BKID AutoCrop')
+    label(bar, 'text', 'BKID Workflowboost')
     button = E.SubElement(bar, 'tool_bar_item', guid=guid('button'))
     label(button, 'text', 'AutoCrop')
     E.SubElement(button, 'left_macro_id').text = guid('capture')

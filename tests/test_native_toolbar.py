@@ -16,7 +16,7 @@ class NativeToolbarTests(unittest.TestCase):
         group = root.find('tool_bar_groups/tool_bar_group')
         bar = root.find('tool_bars/tool_bar')
         macro = root.find('macros/macro_item')
-        self.assertEqual(group.findtext('text/locale_1033'), 'BKID AutoCrop')
+        self.assertEqual(group.findtext('text/locale_1033'), 'BKID Workflowboost')
         self.assertEqual(group.get('active_tool_bar_group'), bar.get('guid'))
         self.assertEqual(group.find('tool_bar_group_item').get('guid'), bar.get('guid'))
         self.assertEqual(group.findtext('tool_bar_group_item/tool_bar_id'), bar.get('guid'))

@@ -79,7 +79,7 @@ namespace BKID.AutoCrop
             if (!File.Exists(path)) throw new FileNotFoundException("Reinstall BKID AutoCrop: toolbar sidecar missing.", path);
             var toolbar = RhinoApp.ToolbarFiles.FindByPath(path) ?? RhinoApp.ToolbarFiles.Open(path);
             if (toolbar == null) throw new InvalidOperationException("Rhino could not open toolbar: " + path);
-            var group = toolbar.GetGroup("BKID AutoCrop");
+            var group = toolbar.GetGroup("BKID Workflowboost");
             if (group == null)
             {
                 var names = new System.Collections.Generic.List<string>();

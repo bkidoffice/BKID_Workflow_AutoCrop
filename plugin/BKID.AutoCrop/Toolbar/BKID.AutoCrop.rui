@@ -11,11 +11,11 @@
   <tool_bar_groups>
     <tool_bar_group guid="b7926733-2135-5ba9-8cdd-f86122132f60" dock_bar_guid32="00000000-0000-0000-0000-000000000000" dock_bar_guid64="615f016a-15aa-5c56-9986-7515ff38539e" active_tool_bar_group="c73633d2-223b-576e-a60d-4f28699d5863" single_file="False" hide_single_tab="True" point_floating="150,150">
       <text>
-        <locale_1033>BKID AutoCrop</locale_1033>
+        <locale_1033>BKID Workflowboost</locale_1033>
       </text>
       <tool_bar_group_item guid="c73633d2-223b-576e-a60d-4f28699d5863" major_version="1" minor_version="1">
         <text>
-          <locale_1033>BKID AutoCrop</locale_1033>
+          <locale_1033>BKID Workflowboost</locale_1033>
         </text>
         <tool_bar_id>c73633d2-223b-576e-a60d-4f28699d5863</tool_bar_id>
       </tool_bar_group_item>
@@ -25,7 +25,7 @@
   <tool_bars>
     <tool_bar guid="c73633d2-223b-576e-a60d-4f28699d5863" bitmap_id="f5f6e247-44da-5c99-9882-ac2ad81b7a37" item_display_style="control_only">
       <text>
-        <locale_1033>BKID AutoCrop</locale_1033>
+        <locale_1033>BKID Workflowboost</locale_1033>
       </text>
       <tool_bar_item guid="1edf058d-74d2-5ebe-832f-6f97c0e558ec">
         <text>

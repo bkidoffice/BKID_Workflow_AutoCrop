@@ -9,7 +9,7 @@ Windows Rhino의 **실제 툴바**에서 로고 버튼을 눌러 투명 PNG를 �
 1. [BKID AutoCrop 2.1 설치 프로그램 다운로드 (.exe)](https://github.com/bkidoffice/BKID_Workflow_AutoCrop/raw/refs/heads/main/installers/BKID_AutoCrop_Setup_2.1.0.exe)
 2. Rhino를 모두 종료하고 설치 프로그램 실행 → **설치 / 다시 설치**
 3. 이어서 열리는 Rhino Installer에서 **현재 사용자 설치** 진행
-4. Rhino 실행 → **BKID AutoCrop 툴바**의 로고 버튼 사용
+4. Rhino 실행 → **BKID Workflowboost 툴바**의 로고 버튼 사용
 
 설치 프로그램은 기존 BKID 설치를 백업·제거한 뒤 새 버전을 설치합니다. 취소·실패하면 이전 파일과 등록 정보 복원을 시도하며 백업은 보관합니다. 저장해 둔 PNG 파일은 건드리지 않습니다.
 
