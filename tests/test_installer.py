@@ -1,0 +1,134 @@
+import base64
+import importlib.util
+import io
+from pathlib import Path
+import sys
+import tempfile
+from types import SimpleNamespace
+import unittest
+from unittest.mock import patch
+import xml.etree.ElementTree as ET
+from PIL import Image
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def load(path):
+    spec = importlib.util.spec_from_file_location('bkid_installer', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+class ToolbarHost:
+    def __init__(self):
+        self.aliases = {}
+        self.open = {}
+        self.visible = set()
+        self.fail_show = False
+
+    def IsAlias(self, name): return name in self.aliases
+    def AliasMacro(self, name, value=None):
+        if value is not None: self.aliases[name] = value
+        return self.aliases.get(name)
+    def AddAlias(self, name, value): self.aliases[name] = value
+    def DeleteAlias(self, name): del self.aliases[name]
+    def IsToolbarCollection(self, path): return self.open.get(path)
+    def CloseToolbarCollection(self, name, prompt):
+        self.open = {p: n for p, n in self.open.items() if n != name}
+        self.visible.discard(name)
+        return True
+    def OpenToolbarCollection(self, path):
+        ET.parse(path)
+        self.open[path] = 'BKID_AutoCrop'
+        return 'BKID_AutoCrop'
+    def ShowToolbar(self, name, group):
+        if self.fail_show: return False
+        self.visible.add(name)
+        return True
+    def IsToolbarVisible(self, name, group): return name in self.visible
+
+
+class InstallerTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix='BKID 한글 ')
+        self.addCleanup(self.temp.cleanup)
+        self.host = ToolbarHost()
+        self.log = []
+        system = SimpleNamespace(Environment=SimpleNamespace(
+            OSVersion=SimpleNamespace(Platform=1), SpecialFolder=SimpleNamespace(ApplicationData=1),
+            GetFolderPath=lambda unused: self.temp.name), PlatformID=SimpleNamespace(Win32NT=1))
+        rhino = SimpleNamespace(RhinoApp=SimpleNamespace(Version=SimpleNamespace(Major=8), WriteLine=self.log.append))
+        self.mods = {'System': system, 'Rhino': rhino, 'rhinoscriptsyntax': self.host}
+        self.module = load(ROOT / 'dist/Install_BKID_AutoCrop.py')
+
+    def install(self):
+        with patch.dict(sys.modules, self.mods), patch.object(sys, 'platform', 'cli'), patch.object(sys, 'version_info', (2, 7)):
+            return Path(self.module.install())
+
+    def test_standalone_repeat_install_and_move(self):
+        folder = self.install()
+        for name in self.module.MANAGED_FILES:
+            self.assertEqual((folder / name).read_bytes(), (ROOT / 'BKID_AutoCrop' / name).read_bytes())
+        self.assertIn(str(folder / 'BKID_AutoCrop.py'), self.host.aliases['RunAutoCrop'])
+        self.assertEqual(len(self.host.open), 1)
+        (folder / 'user_notes.txt').write_text('keep')
+        self.assertEqual(self.install(), folder)
+        self.assertEqual(len(self.host.open), 1)
+        self.assertEqual((folder / 'user_notes.txt').read_text(), 'keep')
+        # The standalone installer does not read files beside itself.
+        self.module.__file__ = '/nonexistent/moved/Install_BKID_AutoCrop.py'
+        self.assertEqual(self.install(), folder)
+
+    def test_failed_update_restores_previous_files_and_alias(self):
+        folder = self.install()
+        target = folder / 'BKID_AutoCrop.py'
+        target.write_bytes(b'previous installation')
+        self.host.aliases['RunAutoCrop'] = 'previous macro'
+        self.host.fail_show = True
+        with self.assertRaises(RuntimeError): self.install()
+        self.assertEqual(target.read_bytes(), b'previous installation')
+        self.assertEqual(self.host.aliases['RunAutoCrop'], 'previous macro')
+        self.assertEqual(len(self.host.open), 1)
+        self.assertFalse(any('설치 완료' in line for line in self.log[3:]))
+
+    def test_first_install_failure_removes_new_alias_and_files(self):
+        self.host.fail_show = True
+        with self.assertRaises(RuntimeError): self.install()
+        self.assertFalse(self.host.aliases)
+        self.assertFalse(self.host.open)
+        self.assertFalse(list(Path(self.temp.name).rglob('*.py')))
+
+    def test_missing_payload_leaves_old_install_untouched(self):
+        folder = self.install()
+        before = (folder / 'BKID_AutoCrop.py').read_bytes()
+        del self.module.EMBEDDED_FILES['BKID_AutoCrop.rui']
+        with self.assertRaises(KeyError): self.install()
+        self.assertEqual((folder / 'BKID_AutoCrop.py').read_bytes(), before)
+        self.assertEqual(len(self.host.open), 1)
+
+    def test_rhino6_uses_separate_folder(self):
+        folder8 = self.install()
+        self.mods['Rhino'].RhinoApp.Version.Major = 6
+        folder6 = self.install()
+        self.assertNotEqual(folder8, folder6)
+        self.assertEqual(folder6.name, 'Rhino6')
+
+    def test_toolbar_icon_and_macro_references(self):
+        rui = ET.parse(ROOT / 'BKID_AutoCrop/BKID_AutoCrop.rui').getroot()
+        macro = rui.find('macros/macro_item')
+        self.assertEqual(macro.findtext('script'), '! RunAutoCrop')
+        self.assertEqual(rui.findtext('tool_bars/tool_bar/tool_bar_item/left_macro_id'), macro.get('guid'))
+        self.assertEqual(rui.findtext('tool_bar_groups/tool_bar_group/tool_bar_group_item/tool_bar_id'), rui.find('tool_bars/tool_bar').get('guid'))
+        for label, size in [('small', 16), ('normal', 24), ('large', 32)]:
+            node = rui.find('bitmaps/' + label + '_bitmap')
+            self.assertEqual(node.find('bitmap_item').get('guid'), macro.findtext('bitmap_id'))
+            png = Image.open(io.BytesIO(base64.b64decode(node.findtext('bitmap'))))
+            self.assertEqual(png.size, (size, size))
+            self.assertEqual(png.mode, 'RGBA')
+            self.assertEqual(png.getpixel((0, 0))[3], 0)
+            self.assertGreater(png.getchannel('A').getextrema()[1], 0)
+
+
+if __name__ == '__main__':
+    unittest.main()

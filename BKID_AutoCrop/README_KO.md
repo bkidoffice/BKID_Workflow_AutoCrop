@@ -2,30 +2,25 @@
 
 Windows Rhino용 자동 투명 PNG 캡처 실행 스크립트입니다. 컴파일된 .rhp 플러그인이 아닌 버튼 등록형 Python 도구입니다.
 
-## 실행 명령 등록 — Rhino 6 / 8 공통
+## 간편 설치 — 설치 도구 1.2
 
-1. ZIP 압축을 풀고 폴더를 고정 위치에 보관합니다.
-2. Rhino 명령창에 `_RunPythonScript`를 입력합니다.
-3. `Install_RunAutoCrop.py`를 선택해 한 번 실행합니다.
-4. 이후에는 `RunAutoCrop` 입력 후 Enter를 누르면 캡처됩니다.
+1. 저장소 첫 화면의 `Install_BKID_AutoCrop.py`를 **Raw 파일로 다운로드**합니다. 이 파일 하나에 캡처 스크립트와 로고 툴바가 포함되어 있습니다.
+2. Windows Rhino 명령창에서 `_RunPythonScript`를 입력하고 다운로드한 파일을 선택합니다.
+3. 설치 완료 후 **BKID AutoCrop 로고 버튼**을 클릭합니다. `RunAutoCrop` 명령으로도 실행할 수 있습니다.
 
-Rhino 6과 8에서는 각각 한 번 등록합니다. 같은 이름의 기존 별칭이 있으면 이 파일 경로로 갱신합니다. 폴더를 옮긴 경우 설치 스크립트를 다시 실행하십시오.
+설치 시 `%APPDATA%\BKID\AutoCrop\Rhino6` 또는 `Rhino8`에 파일을 복사하고 명령 별칭과 전용 툴바를 등록합니다. 관리자 권한이나 별도의 pip 설치는 필요하지 않습니다. 설치 후 다운로드한 설치 파일은 삭제하거나 이동해도 됩니다. Rhino 6과 8은 각각 한 번 설치합니다.
 
-실행 명령은 공백 없는 `RunAutoCrop`입니다. Rhino 명령 별칭에는 공백을 사용할 수 없습니다. 버튼 표시 이름은 **Run AutoCrop**으로 지정할 수 있습니다. 등록은 사용자 PC에서 설치 스크립트를 실행해야 적용됩니다.
+소스 ZIP을 받은 경우 압축을 푼 뒤 `BKID_AutoCrop/Install_RunAutoCrop.py`를 같은 방식으로 실행해도 됩니다. 이 경우 함께 제공된 `.rui`, 캡처 스크립트, `assets` 폴더가 필요합니다.
 
-기본 저장 위치는 바탕화면의 `BKID_Captures`입니다. 두 버전 모두 IronPython 2.7의 RunPythonScript 경로를 사용하며, 별도 pip 설치가 필요 없습니다.
+같은 설치 파일을 다시 실행하면 기존 설치와 툴바를 갱신합니다. 기존 `RunAutoCrop` 별칭은 새 설치 경로로 바뀝니다. 설치 오류 시 이 설치기가 변경한 파일과 별칭을 복원하며, 복구에도 실패하면 F2 명령 기록에 백업 위치를 남깁니다. 캡처 스크립트를 직접 수정한 경우 업데이트 전에 별도로 보관하세요.
 
-## 툴바 버튼 설정
+### 로고와 툴바
 
-버튼 표시 이름: **Run AutoCrop**
+첨부된 SVG 원본을 `assets/BKID_AutoCrop_Icon.svg`에 보관하고, 투명 PNG 16·24·32px을 생성해 `BKID_AutoCrop.rui`에 내장했습니다. 아이콘을 따로 지정할 필요가 없습니다. 툴바는 `! RunAutoCrop` 매크로를 실행합니다.
 
-위 설치 후 버튼 매크로:
+설치 후 툴바를 숨긴 경우 Rhino의 툴바 설정에서 `BKID AutoCrop`을 표시하거나 설치 파일을 다시 실행합니다. Rhino 재시작 후 툴바 유지와 Rhino 8의 UI 변환 동작은 실제 Windows Rhino에서 확인이 필요합니다.
 
-```
-! RunAutoCrop
-```
-
-이 패키지는 명령 별칭을 등록합니다. 툴바 버튼 자체를 자동 생성하지는 않습니다.
+기본 캡처 위치는 바탕화면 `BKID_Captures`입니다. 실행 엔진은 두 버전 모두 **IronPython 2.7**이며 Rhino 8 CPython 3은 지원하지 않습니다. 컴파일된 `.rhp` 플러그인이나 패키지 관리자용 `.yak` 파일은 아닙니다.
 
 ## 동작 규칙
 
@@ -92,3 +87,21 @@ GitHub 본문 직접 열기는 검색 도구에서 실패하여, McNeel 포럼�
 두 버전의 실기 확인을 모두 통과해야 정상 작동 검증 완료로 판정합니다.
 
 Rhino 8의 IronPython 지원 공식 설명: https://developer.rhino3d.com/guides/rhinopython/python-3-in-rhino/
+
+## 설치 도구 1.2 검증
+
+- 클라우드 모의 Rhino 호스트에서 6개 자동 테스트 통과: 단일 파일 설치·재설치·이동, 업데이트 실패 복원, 첫 설치 실패 정리, 누락 패키지 보호, Rhino 6/8 설치 경로 분리, RUI 매크로·아이콘 참조와 PNG 크기·투명도.
+- RUI XML 구조 검사와 Python 문법 검사를 수행했습니다. 이 검사는 Rhino 자체의 RUI 로딩 검증을 대신하지 않습니다.
+- Windows Rhino 6/8에서 설치 실행, 로고 표시, 버튼 클릭 캡처, 재시작 후 유지, 한글 사용자 경로는 **미실행**입니다. 캡처 엔진의 실기 검증 상태도 위 표와 같습니다.
+
+### 개발자 빌드
+
+Python 3에서 `python -m pip install CairoSVG==2.8.2 Pillow` 후 저장소 루트에서 `python tools/build_release.py`를 실행합니다. SVG에서 PNG/RUI, 루트 단일 설치 파일, `dist`의 설치 파일과 소스 ZIP을 재생성합니다. CairoSVG는 빌드 머신에 Cairo 라이브러리가 필요합니다. 최종 사용자 Rhino에는 필요하지 않습니다.
+
+테스트: `python -m unittest discover -s tests -v`
+
+### 구현 근거
+
+- McNeel 공식 [rhinoscriptsyntax toolbar.py](https://github.com/mcneel/rhinoscriptsyntax/blob/master/Scripts/rhinoscript/toolbar.py)의 `OpenToolbarCollection`, `CloseToolbarCollection`, `ShowToolbar`, `IsToolbarVisible` 구현을 확인했습니다. 이 함수들은 RhinoApp.ToolbarFiles와 그룹 Visible을 사용합니다.
+- McNeel 공식 [SampleShowToolbarGroup.py](https://github.com/mcneel/rhino-developer-samples/blob/master/rhinopython/SampleShowToolbarGroup.py)의 컬렉션 로드 → 그룹 조회 → 표시 흐름을 확인했습니다(MIT).
+- [COMPAS v0.19.3의 rui.py](https://github.com/compas-dev/compas/blob/v0.19.3/src/compas_rhino/ui/rui.py)에서 RhinoUI 2.0의 매크로·툴바·그룹과 PNG 비트맵 슬롯 구조를 확인했습니다. 생성기는 이 파일의 코드를 복제하지 않고 프로젝트에 맞게 작성했습니다. COMPAS의 MIT 라이선스는 저장소 LICENSE에서 확인했습니다.
