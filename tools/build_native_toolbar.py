@@ -17,7 +17,7 @@ def label(parent, tag, value):
 
 
 def build():
-    r = E.Element('RhinoUI', major_ver='3', minor_ver='0', guid=guid('file'),
+    r = E.Element('RhinoUI', major_ver='2', minor_ver='0', guid=guid('file'),
                   localize='False', default_language_id='1033', dpi_scale='100')
     extend = E.SubElement(r, 'extend_rhino_menus')
     label(E.SubElement(extend, 'menu', guid=guid('menus')), 'text', 'Extend Rhino Menus')
@@ -43,12 +43,13 @@ def build():
     E.SubElement(button, 'left_macro_id').text = guid('capture')
     E.SubElement(button, 'right_macro_id').text = guid('resolution')
     macros = E.SubElement(r, 'macros')
-    for key, command, caption in [('capture', 'BKIDAutoCropCapture', 'AutoCrop'),
-                                   ('resolution', 'BKIDAutoCropResolution', 'AutoCrop 해상도 선택')]:
+    for key, command, caption, tooltip in [
+            ('capture', 'BKIDAutoCropCapture', 'AutoCrop', '좌클릭: 기본 해상도(1배)로 자동 크롭·PNG 저장'),
+            ('resolution', 'BKIDAutoCropResolution', 'AutoCrop 해상도 선택', '우클릭: 캡처 해상도 선택 (×2·×3·×4)')]:
         macro = E.SubElement(macros, 'macro_item', guid=guid(key), bitmap_id=guid('icon'))
         for tag, value in [('text', caption),
-                           ('tooltip', '좌클릭: 바로 저장 / 우클릭: ×2·×3·×4 해상도 선택'),
-                           ('help_text', 'Capture transparent PNG with 1px margin'),
+                           ('tooltip', tooltip),
+                           ('help_text', tooltip),
                            ('button_text', caption), ('menu_text', caption)]:
             label(macro, tag, value)
         E.SubElement(macro, 'script').text = '! _' + command

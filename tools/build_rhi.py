@@ -9,7 +9,7 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '2.3.1'
+VERSION = '2.4.0'
 PROJECT = ROOT / 'plugin/BKID.AutoCrop/BKID.AutoCrop.csproj'
 
 
@@ -23,6 +23,9 @@ def main():
     toolbar = build_toolbar()
     subprocess.run([args.dotnet, 'restore', str(PROJECT), '--locked-mode'], check=True)
     subprocess.run([args.dotnet, 'build', str(PROJECT), '-c', 'Release', '--no-restore'], check=True)
+    probe = ROOT / 'tools/CheckRhino6/CheckRhino6.csproj'
+    subprocess.run([args.dotnet, 'restore', str(probe), '--locked-mode'], check=True)
+    subprocess.run([args.dotnet, 'build', str(probe), '-c', 'Release', '--no-restore'], check=True)
     binary = PROJECT.parent / 'bin/Release/net45/BKID.AutoCrop.rhp'
     subprocess.run([args.dotnet, 'run', '--project', str(ROOT / 'tools/VerifyPlugin'),
                     '-c', 'Release', '--', str(binary),

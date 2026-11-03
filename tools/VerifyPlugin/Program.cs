@@ -10,8 +10,8 @@ using var pe = new PEReader(input);
 if (!pe.HasMetadata) throw new Exception("The RHP is not a compiled .NET assembly.");
 var reader = pe.GetMetadataReader();
 var assembly = reader.GetAssemblyDefinition();
-if (reader.GetString(assembly.Name) != (setup ? "BKID_AutoCrop_Setup_2.3.1" : "BKID.AutoCrop")) throw new Exception("Wrong assembly identity.");
-if (assembly.Version != new Version(2, 3, 1, 0)) throw new Exception("Wrong assembly version.");
+if (reader.GetString(assembly.Name) != (setup ? "BKID_AutoCrop_Setup_2.4.0" : "BKID.AutoCrop")) throw new Exception("Wrong assembly identity.");
+if (assembly.Version != new Version(2, 4, 0, 0)) throw new Exception("Wrong assembly version.");
 bool validGuid = false;
 foreach (var handle in assembly.GetCustomAttributes())
 {
@@ -48,7 +48,13 @@ if (!resources["BKID.AutoCrop.Capture.py"].SequenceEqual(File.ReadAllBytes(args[
     throw new Exception("Embedded capture differs from repository source.");
 if (!resources["BKID.AutoCrop.Icon.png"].SequenceEqual(File.ReadAllBytes(args[2])))
     throw new Exception("Embedded logo differs from repository asset.");
-var references = reader.AssemblyReferences.Select(h => reader.GetString(reader.GetAssemblyReference(h).Name)).ToHashSet();
+var versions = reader.AssemblyReferences.Select(h => reader.GetAssemblyReference(h))
+    .ToDictionary(reference => reader.GetString(reference.Name), reference => reference.Version);
+var references = versions.Keys.ToHashSet();
 if (!references.Contains("RhinoCommon"))
     throw new Exception("Missing host SDK references.");
-Console.WriteLine("Verified compiled RHP, version, Rhino assembly GUID, host references, capture source and logo resources.");
+if (versions["RhinoCommon"] != new Version(6, 0, 18016, 23451) ||
+    versions["Rhino.UI"] != new Version(6, 0, 18016, 23451) ||
+    versions["Eto"] != new Version(2, 3, 6591, 18824))
+    throw new Exception("Plugin references exceed the selected initial Rhino 6 SDK baseline.");
+Console.WriteLine("Verified compiled RHP, version, GUID, Rhino 6.0/Eto 2.3 references, capture source and logo resources.");

@@ -11,9 +11,9 @@ Windows Rhino의 실제 **BKID Workflowboost** 툴바에서 로고 버튼으로 
 
 배율은 캡처의 가로·세로 해상도에 적용합니다. 선택은 그 캡처에만 적용되어 다음 좌클릭은 1배입니다. 최종 크기는 자동 크롭에 따라 달라지며 투명 여백은 배율과 관계없이 사방 1px입니다.
 
-## 설치 / 다시 설치 — 2.3
+## 설치 / 다시 설치 — 2.4
 
-1. [설치 프로그램 다운로드 (.exe)](https://github.com/bkidoffice/BKID_Workflow_AutoCrop/raw/refs/heads/main/installers/BKID_AutoCrop_Setup_2.3.1.exe)
+1. [설치 프로그램 다운로드 (.exe)](https://github.com/bkidoffice/BKID_Workflow_AutoCrop/raw/refs/heads/main/installers/BKID_AutoCrop_Setup_2.4.0.exe)
 2. Rhino를 모두 종료하고 실행 → **설치 / 다시 설치**
 3. 기존 설치가 있으면 **“설치되어 있습니다. 삭제하고 다시 설치할까요?”**에 예/아니요 선택
 4. 예를 선택했거나 처음 설치하는 경우, 이어지는 Rhino Installer에서 **현재 사용자 설치** 완료
@@ -26,4 +26,6 @@ Windows Rhino의 실제 **BKID Workflowboost** 툴바에서 로고 버튼으로 
 
 빌드·패키지·파일 삭제 검사는 통과했습니다. 실제 Windows 설치·레지스트리 처리와 Rhino 재시작 후 도킹 상태는 아직 미검증입니다. 이전 보고의 보안 프로그램 위협 탐지 원인도 미확인입니다.
 
-2.3.1은 기존 툴바의 우클릭 연결도 갱신합니다. 업데이트 후에도 우클릭이 바로 저장된다면 `BKIDAutoCropRefresh`를 실행해 저장된 버튼 연결을 다시 읽을 수 있습니다.
+2.4.0은 기존 툴바의 우클릭 연결도 갱신합니다. 업데이트 후에도 우클릭이 바로 저장된다면 `BKIDAutoCropRefresh`를 실행해 저장된 버튼 연결을 다시 읽을 수 있습니다.
+
+2.4는 Rhino 6 초기 정식 SDK와 RUI 2.0을 기준으로 호환 경로를 보완했습니다. 마우스 설명은 **좌클릭: 기본 해상도(1배)로 자동 크롭·PNG 저장**, **우클릭: 캡처 해상도 선택 (×2·×3·×4)**으로 각각 표시하며, 기존에 저장된 버튼의 설명도 갱신합니다. Rhino 6에서 보고된 실행 실패의 정확한 원인은 F2 오류 기록 확인이 필요합니다.

@@ -1,4 +1,4 @@
-# Native toolbar and deletion-first installer — 2.3.1
+# Native toolbar and deletion-first installer — 2.4.0
 
 ## Build
 
@@ -8,9 +8,9 @@ Install .NET SDK 8 and run from the repository root:
 python3 tools/build_rhi.py
 ```
 
-An SDK outside PATH can be passed with `--dotnet /path/to/dotnet`. Locked dependencies compile a RhinoCommon 6.35 / .NET Framework 4.5 RHP and an x64 Windows setup EXE. The builder verifies metadata, embedded capture/logo/image bytes, RHI contents and shared managed-file deletion tests. `python3 -m unittest discover -s tests -v` additionally runs legacy installer and native RUI checks (Pillow required).
+An SDK outside PATH can be passed with `--dotnet /path/to/dotnet`. Locked dependencies compile a RhinoCommon 6.0.18016.23451 / .NET Framework 4.5 RHP and an x64 Windows setup EXE. The builder verifies metadata, embedded capture/logo/image bytes, RHI contents and shared managed-file deletion tests. `python3 -m unittest discover -s tests -v` additionally runs legacy installer and native RUI checks (Pillow required).
 
-Outputs: `installers/BKID_AutoCrop_Setup_2.3.1.exe` and `installers/BKID_AutoCrop_2.3.1.rhi`. Host SDK DLLs are not distributed. The EXE is not Authenticode signed; a previously reported security-product threat detection remains undiagnosed.
+Outputs: `installers/BKID_AutoCrop_Setup_2.4.0.exe` and `installers/BKID_AutoCrop_2.4.0.rhi`. Host SDK DLLs are not distributed. The EXE is not Authenticode signed; a previously reported security-product threat detection remains undiagnosed.
 
 ## Deletion-first setup
 
@@ -44,10 +44,20 @@ The original capture command uses the default 1x script. High-resolution capture
 
 `tools/TestCapture` links the real C# runner generator and executes its outputs under Python at Korean/space-containing paths, checking x2/x3/x4 argument delivery, unchanged source/defaults and invalid factor rejection. Python capture tests exercise scaled ViewCapture settings under a mock Rhino host, default 1x after high-resolution calls, finite-scale validation, fixed margins and selection restoration on errors. These do not execute IronPython, System.Drawing, actual Rhino rendering or the Eto dialog. All require Windows Rhino 6/8 host validation separately.
 
-## 2.3.1: confirmation and saved-toolbar migration
+## 2.4.0: confirmation and saved-toolbar migration
 
 The setup uses `InstallWorkflow.RunAsync`: detection is read-only, the Yes/No question resumes on the WinForms UI context, and the destructive install action is called only after Yes when an existing installation is present. No returns without calling the install action. A fresh install skips the question, but the backend rechecks before deletion and rejects a newly discovered existing installation unless replacement was approved. The question defaults to No. Shared workflow tests exercise real file preservation/replacement and the no-consent guard.
 
-The reported symptom—right-click immediately performing the old capture—indicates a stale saved button binding rather than a displayed scale dialog. Existing toolbar collections can retain old left/right IDs even when the installed RUI has changed. On the first UI-idle pass for binding revision `right-resolution-1`, the plugin identifies loaded collections containing our capture command, saves the current layout, patches only the AutoCrop right macro, and reopens the collection to refresh cached controls. It also recognizes copied buttons with new IDs by their exact capture command. Group docking XML, visibility, left click and unrelated buttons are preserved; collections with no AutoCrop button are not saved/reopened. After successful migration the revision is persisted, so this reload is not repeated on every launch. A correct on-disk RUI still gets a one-time reload if it contains our button, because in-memory controls can be stale.
+The reported symptom—right-click immediately performing the old capture—indicates a stale saved button binding rather than a displayed scale dialog. Existing toolbar collections can retain old left/right IDs even when the installed RUI has changed. On the first UI-idle pass for the saved binding revision (currently `rhino6-tooltips-2`), the plugin identifies loaded collections containing our capture command, saves the current layout, patches only the AutoCrop right macro, and reopens the collection to refresh cached controls. It also recognizes copied buttons with new IDs by their exact capture command. Group docking XML, visibility, left click and unrelated buttons are preserved; collections with no AutoCrop button are not saved/reopened. After successful migration the revision is persisted, so this reload is not repeated on every launch. A correct on-disk RUI still gets a one-time reload if it contains our button, because in-memory controls can be stale.
 
 `BKIDAutoCropRefresh` manually repeats this scoped refresh without intentionally floating/showing the toolbar. No new standalone capture window is added. RUI save/reload and actual docking preservation need Windows Rhino validation; XML-level tests do not prove native UI behavior.
+
+## 2.4: Rhino 6 compatibility checks and separate tooltips
+
+The prior build used RhinoCommon 6.35 and a RUI 3 header. C# and capture API probes also compile against Rhino 6.0.18016.23451, so production now targets that initial stable SDK and ships the backward-compatible RUI 2 schema. The NuGet lock retains package integrity metadata. `tools/CheckRhino6` adds compile-time probes for the APIs dynamically called from IronPython, including transparent ViewCapture and selection restoration. These checks establish API availability, not working Windows rendering or a confirmed cause for the user's reported Rhino 6 failure.
+
+Startup waits for `RhinoApp.MainWindowHandle()` rather than relying on an Eto owner window. Legacy cleanup and saved-RUI migration failures are logged independently and cannot suppress initial native toolbar display. First-display persistence and subsequent docking behavior remain as before. The user's exact Rhino 6 failure stage/F2 output is still needed; do not call host compatibility validated from compilation alone.
+
+Source macro tooltip/help text now differs for left and right click. Migration updates only those descriptions for recognized AutoCrop macros, retaining their IDs and other button/layout data. It also updates descriptions when the right-click binding is already correct; tests cover that previously missed case. A new binding revision reloads existing cached controls once to apply these descriptions.
+
+Binary metadata comparison confirmed that 2.3.1 referenced RhinoCommon/Rhino.UI 6.35.21222.17000 and Eto 2.5.0.0. The 2.4 build references RhinoCommon/Rhino.UI 6.0.18016.23451 and Eto 2.3.6591.18824; `VerifyPlugin` enforces those baseline references to catch accidental SDK upgrades. This is a compatibility correction, not confirmation of the exact user error without its message.

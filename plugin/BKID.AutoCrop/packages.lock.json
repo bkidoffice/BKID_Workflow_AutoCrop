@@ -13,9 +13,9 @@
       },
       "RhinoCommon": {
         "type": "Direct",
-        "requested": "[6.35.21222.17001, )",
-        "resolved": "6.35.21222.17001",
-        "contentHash": "y9f+38ZLxAz+PZLdQyuijRbpL6r9PptXaSHeIHTk56Cb0+ziWWRna2a4K+4gRyhb0h9AjJLsUMWa4i0SgrdYhg=="
+        "requested": "[6.0.18016.23451, )",
+        "resolved": "6.0.18016.23451",
+        "contentHash": "1l6lrciyp8uNcfYUBgxbD+onX9nWywnUBrO2ECL+UNhJqhgDIZaEDfkvX24NTgqcftyGgdgytf9lzo8idR28XQ=="
       },
       "Microsoft.NETFramework.ReferenceAssemblies.net45": {
         "type": "Transitive",

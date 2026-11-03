@@ -48,6 +48,22 @@ var external = new XDocument(new XElement("RhinoUI", new XElement("tool_bars", n
     new XElement("tool_bar_item", new XElement("left_macro_id", (string)capture.Attribute("guid")!),
                  new XElement("right_macro_id", (string)capture.Attribute("guid")!))))));
 Assert(ToolbarBindings.Patch(external.ToString(), template) != null, "Cross-collection capture reference without local macros was not repaired.");
+// Existing correct bindings must also receive the newly separated descriptions.
+var shared = XDocument.Parse(template);
+foreach (var macro in shared.Root!.Element("macros")!.Elements("macro_item"))
+{
+    macro.Element("tooltip")!.SetElementValue("locale_1033", "old shared description");
+    macro.Element("help_text")!.SetElementValue("locale_1033", "old shared description");
+}
+string updatedDescriptions = ToolbarBindings.Patch(shared.ToString(), template);
+Assert(updatedDescriptions != null, "Correct bindings with old descriptions were not refreshed.");
+var described = XDocument.Parse(updatedDescriptions!);
+var describedMacros = described.Root!.Element("macros")!.Elements("macro_item").ToList();
+Assert(describedMacros[0].Element("tooltip")!.Value.Contains("좌클릭"), "Left description not updated.");
+Assert(describedMacros[1].Element("tooltip")!.Value.Contains("우클릭"), "Right description not updated.");
+Assert(describedMacros[0].Element("tooltip")!.Value != describedMacros[1].Element("tooltip")!.Value, "Descriptions are still identical.");
+Assert(ToolbarBindings.Patch(updatedDescriptions!, template) == null, "Description migration should be idempotent.");
+Console.WriteLine("PASS: existing macros with correct bindings get distinct left/right descriptions without requiring rebinding.");
 bool dtdRejected = false;
 try { ToolbarBindings.Patch("<!DOCTYPE RhinoUI [<!ENTITY x SYSTEM 'file:///never-read'>]><RhinoUI/>", template); }
 catch (XmlException) { dtdRejected = true; }

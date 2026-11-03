@@ -13,7 +13,7 @@ namespace BKID.AutoCrop
     [Guid("3881C10B-30A8-4FE5-BB48-9E53A6FEA1F4")]
     public sealed class AutoCropPlugin : PlugIn
     {
-        private const string BindingRevision = "right-resolution-1";
+        private const string BindingRevision = "rhino6-tooltips-2";
         private const string BindingRevisionKey = "ToolbarBindingRevision";
         private const string ToolbarInitializedKey = "NativeToolbarInitialized";
         private bool waitingForStartup;
@@ -25,7 +25,7 @@ namespace BKID.AutoCrop
 
         protected override LoadReturnCode OnLoad(ref string errorMessage)
         {
-            RhinoApp.WriteLine("BKID Workflowboost " + GetType().Assembly.GetName().Version + " loaded.");
+            RhinoApp.WriteLine("BKID Workflowboost " + GetType().Assembly.GetName().Version + " loaded | Rhino " + RhinoApp.Version + " | CLR " + Environment.Version);
             // Afterwards Rhino restores the user's docking and visibility state.
             if (!Settings.GetBool(ToolbarInitializedKey, false) || Settings.GetString(BindingRevisionKey, "") != BindingRevision)
             {
@@ -38,12 +38,25 @@ namespace BKID.AutoCrop
         private void OnStartupIdle(object sender, EventArgs e)
         {
             // AtStartup can run before Rhino has a document and an owner window.
-            if (RhinoDoc.ActiveDoc == null || RhinoEtoApp.MainWindow == null) return;
+            if (RhinoDoc.ActiveDoc == null || RhinoApp.MainWindowHandle() == IntPtr.Zero) return;
             startupAttempts++;
             try
             {
-                if (startupAttempts == 1) RemoveLegacyRegistration();
-                if (Settings.GetString(BindingRevisionKey, "") != BindingRevision) RefreshToolbarBindings();
+                if (startupAttempts == 1)
+                {
+                    try { RemoveLegacyRegistration(); }
+                    catch (Exception legacyError) { RhinoApp.WriteLine("AutoCrop legacy cleanup: " + legacyError); }
+                }
+                if (Settings.GetString(BindingRevisionKey, "") != BindingRevision)
+                {
+                    try { RefreshToolbarBindings(); }
+                    catch (Exception refreshError)
+                    {
+                        // An optional saved-toolbar migration must not block first display.
+                        RhinoApp.WriteLine("AutoCrop saved-toolbar refresh: " + refreshError);
+                        RhinoApp.WriteLine("Run BKIDAutoCropRefresh to retry the saved-toolbar update.");
+                    }
+                }
                 if (!Settings.GetBool(ToolbarInitializedKey, false)) ShowToolbar();
                 StopWaitingForStartup();
             }
@@ -114,7 +127,7 @@ namespace BKID.AutoCrop
         {
             if (scale < 1 || scale > 4) throw new ArgumentOutOfRangeException("scale");
             var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                                      "BKID", "AutoCrop", "runtime", "2.3.1");
+                                      "BKID", "AutoCrop", "runtime", "2.4.0");
             Directory.CreateDirectory(folder);
             var target = Path.Combine(folder, "BKID_AutoCrop.py");
             using (var input = Assembly.GetExecutingAssembly().GetManifestResourceStream("BKID.AutoCrop.Capture.py"))
@@ -207,8 +220,10 @@ namespace BKID.AutoCrop
             try
             {
                 var path = AutoCropPlugin.Instance.PrepareCaptureScript(scale);
-                return RhinoApp.RunScript("_-RunPythonScript \"" + path + "\"", false)
-                    ? Result.Success : Result.Failure;
+                bool started = RhinoApp.RunScript("_-RunPythonScript \"" + path + "\"", false);
+                if (!started)
+                    RhinoApp.WriteLine("AutoCrop: _RunPythonScript를 실행하지 못했습니다. RhinoPython 활성 상태와 F2 명령 기록을 확인해 주세요.");
+                return started ? Result.Success : Result.Failure;
             }
             catch (Exception error) { RhinoApp.WriteLine("BKID AutoCrop: " + error); return Result.Failure; }
         }

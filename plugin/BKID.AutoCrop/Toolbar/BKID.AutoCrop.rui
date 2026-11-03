@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<RhinoUI major_ver="3" minor_ver="0" guid="9b748537-c94f-50a8-81c7-a3bc2003ad84" localize="False" default_language_id="1033" dpi_scale="100">
+<RhinoUI major_ver="2" minor_ver="0" guid="9b748537-c94f-50a8-81c7-a3bc2003ad84" localize="False" default_language_id="1033" dpi_scale="100">
   <extend_rhino_menus>
     <menu guid="95e9c0e9-7b42-5e18-b8ef-c9bd73074093">
       <text>
@@ -42,10 +42,10 @@
         <locale_1033>AutoCrop</locale_1033>
       </text>
       <tooltip>
-        <locale_1033>좌클릭: 바로 저장 / 우클릭: ×2·×3·×4 해상도 선택</locale_1033>
+        <locale_1033>좌클릭: 기본 해상도(1배)로 자동 크롭·PNG 저장</locale_1033>
       </tooltip>
       <help_text>
-        <locale_1033>Capture transparent PNG with 1px margin</locale_1033>
+        <locale_1033>좌클릭: 기본 해상도(1배)로 자동 크롭·PNG 저장</locale_1033>
       </help_text>
       <button_text>
         <locale_1033>AutoCrop</locale_1033>
@@ -60,10 +60,10 @@
         <locale_1033>AutoCrop 해상도 선택</locale_1033>
       </text>
       <tooltip>
-        <locale_1033>좌클릭: 바로 저장 / 우클릭: ×2·×3·×4 해상도 선택</locale_1033>
+        <locale_1033>우클릭: 캡처 해상도 선택 (×2·×3·×4)</locale_1033>
       </tooltip>
       <help_text>
-        <locale_1033>Capture transparent PNG with 1px margin</locale_1033>
+        <locale_1033>우클릭: 캡처 해상도 선택 (×2·×3·×4)</locale_1033>
       </help_text>
       <button_text>
         <locale_1033>AutoCrop 해상도 선택</locale_1033>
