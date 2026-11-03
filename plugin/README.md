@@ -1,52 +1,47 @@
-# Native Rhino host, version 2.0.0
+# Native toolbar and replacement installer, 2.1.0
 
-The native C# host provides Windows installation, a persistent startup preference, a modeless Eto window and two Rhino commands. The existing IronPython capture algorithm is embedded unchanged. The minimum SDK target is RhinoCommon 6.35 / .NET Framework 4.5; intended hosts are Windows Rhino 6 and 8. Host compatibility still needs real Windows validation.
+2.1 removes the modeless Eto capture window. The RHP now opens a native Rhino RUI toolbar containing one logo button. A Windows WinForms setup EXE backs up/removes known prior user installations, then invokes the standard Rhino Installer for the embedded RHI. The setup GUI is only an installation interface; it is not opened by Rhino.
 
-## Build
+## Build and validate
 
-Install .NET SDK 8. From the repository root:
+Install .NET SDK 8, then from the repository root:
 
 ```sh
 python3 tools/build_rhi.py
 ```
 
-For an SDK outside PATH:
+For an SDK outside PATH, pass `--dotnet /path/to/dotnet`. Dependencies are pinned by each `packages.lock.json` and restored in locked mode. No Windows runtime is claimed by the Linux build.
 
-```sh
-python3 tools/build_rhi.py --dotnet /path/to/dotnet
-```
+The builder generates native RUI, compiles the RHP against RhinoCommon 6.35 / .NET Framework 4.5, validates assembly identity and embedded resources, packages RHP + matching-name RUI, compiles the .NET Framework Windows setup EXE with embedded RHI and logo, verifies its embedded package, and executes the shared file transaction tests on .NET 8. Host SDK binaries are not redistributed.
 
-The build restores dependencies in locked mode, compiles the RHP, verifies its assembly metadata/resources and creates `installers/BKID_AutoCrop_2.0.0.rhi`. Commit the RHI when changing distributed plugin code. It contains only the compiled RHP; scripts and logos are embedded resources. RhinoCommon, Rhino.UI and Eto are supplied by the Rhino host and are not copied into the installer.
+Outputs committed for download:
 
-`tools/VerifyPlugin` uses .NET PE metadata, so verification does not require or pretend to run the Windows Rhino host. It checks the real installer GUID, assembly version, host references, and exact capture/logo resource bytes. The package builder checks the archive and its RHP contents.
+- `installers/BKID_AutoCrop_Setup_2.1.0.exe` — recommended removal/reinstallation workflow.
+- `installers/BKID_AutoCrop_2.1.0.rhi` — underlying standard package, without pre-removal logic.
 
-The original logo is in `BKID_AutoCrop/assets/BKID_AutoCrop_Icon.svg`. The native window uses `icon_64.png`, rendered from that SVG with CairoSVG 2.8.2. To regenerate it:
+Run `python3 -m unittest discover -s tests -v` (Pillow required) for legacy installer tests and native RUI/package checks. `tools/TestSetup` links the actual `ManagedFiles.cs` used by setup, so backup/removal/rollback checks run on the real file transaction code rather than a mock.
 
-```sh
-python3 -m pip install CairoSVG==2.8.2
-python3 -c "import cairosvg; cairosvg.svg2png(url='BKID_AutoCrop/assets/BKID_AutoCrop_Icon.svg', write_to='BKID_AutoCrop/assets/icon_64.png', output_width=64, output_height=64)"
-```
+## Toolbar lifecycle
 
-Legacy installer tests remain available via `python3 -m unittest discover -s tests -v` (Pillow required). These do not validate the native plugin's startup lifecycle.
+`LoadTime` is AtStartup. The idle callback waits for a document/main owner window, removes known legacy aliases/old toolbar registration, and shows the native group. Up to five UI idle cycles allow Rhino 8 to complete sidecar import. There is no separate capture Form or substitute logo window. `BKIDAutoCrop` retries showing the same group. The toolbar calls `BKIDAutoCropCapture`, a ScriptRunner command using the embedded original IronPython capture engine.
 
-## Lifecycle
+The RUI has a fresh stable file/group GUID namespace to avoid cached legacy definitions. Its `bitmap_id` is an attribute on the macro/toolbar; the group item and active toolbar identifiers resolve to the toolbar, and floating/docking state is explicit. It ships beside an identically named RHP, following Rhino's official automatic toolbar loading contract. Rhino owns placement persistence; real-host testing is required.
 
-- `AutoCropPlugin.LoadTime` returns `PlugInLoadTime.AtStartup`.
-- `OnLoad` subscribes once to `RhinoApp.Idle` when the saved startup preference is true (default).
-- The idle callback waits for a model document and Rhino owner window, unsubscribes, then opens one Eto Form. Errors are printed in command history.
-- `BKIDAutoCrop` opens or brings forward the same window. Closing disposes the logo stream/image and clears the reference.
-- The checkbox uses Rhino's plugin `Settings` for persistence. `OnShutdown` removes the idle callback and closes the window.
-- `BKIDAutoCropCapture` is marked `CommandStyle(Style.ScriptRunner)` so it can invoke `_RunPythonScript`. It extracts the embedded script to `%LOCALAPPDATA%/BKID/AutoCrop/runtime/2.0.0` and runs it with Rhino's IronPython engine. Capture errors are reported by the original script in F2; a successful script command dispatch is not a guarantee of saved PNG output.
+## Reinstall transaction
 
-The startup preference defaults to enabled without modifying global Rhino startup macros, user aliases or other plugin settings.
+The EXE is x64 (Windows Rhino 6/8 are x64). It requires Rhino to be closed, serializes concurrent setup processes via a named mutex, discovers all candidate managed RHP files before changing them, validates the assembly GUID, and backs up exact current-user registry keys. HKLM installations are not removed automatically. Reparse points are not traversed for discovery and file operations reject links/junctions.
+
+Only known managed plugin/script files are removed, after verifying byte-equivalent backups. Other files and capture output are preserved. The EXE then opens the native RHI installer, waits and checks installed RHP/RUI bytes; cancelling or incomplete installation triggers file and registry recovery. A conflicting newly created file is never overwritten during recovery; backups remain available. External user source paths are not recursively deleted.
+
+The cleanup covers standard per-user Rhino 6/8 Plug-ins folders and previous BKID AppData paths. It does not promise to remove arbitrary manually copied source trees, custom package-manager installs or machine-wide installations. The default native installer route must use current-user scope. The EXE is not Authenticode signed; Windows distribution policy and the real installer workflow need Windows validation.
 
 ## Sources inspected
 
-- McNeel's [Windows plugin installer guide](https://developer.rhino3d.com/guides/rhinocommon/plugin-installers-windows/) (official Markdown source): an RHI is a ZIP containing compiled RHP files; the installer inspects assemblies, not folder names. The installer engine is a legacy distribution route; McNeel recommends Package Manager/Yak for future managed distribution. This task uses RHI for a local double-click installation without publishing a package feed.
-- [RhinoCommon plugin lifecycle source](https://github.com/mcneel/rhino3dm/blob/main/src/dotnet/rhino/rhinosdkplugin.cs): assembly-level GUID/title discovery, `PlugInLoadTime`, `OnLoad`, `OnShutdown`.
-- McNeel `rhino-developer-samples`: `rhinocommon/cs/SampleCsEto/Commands/SampleCsEtoModelessFormCommand.cs` and `rhinopython/SampleEtoModelessForm.py`: Rhino-owned modeless forms, single-window lifetime, button-triggered commands. MIT sample patterns were consulted; no third-party sample files are distributed.
-- The pinned RhinoCommon 6.35 NuGet XML and actual reference assemblies were used to check and compile the invoked APIs.
+- [Official toolbar deployment guide](https://developer.rhino3d.com/guides/rhinocommon/create-deploy-plugin-toolbar/): an RUI with exactly the RHP basename, in the same directory, is automatically opened on first plugin load.
+- [Official Rhino Installer Engine guide](https://developer.rhino3d.com/guides/general/rhino-installer-engine/): RHI copies/registers the newest compatible plugin identified by assembly GUID/version/SDK, but does not execute custom cleanup. That is why pre-removal belongs in the separate setup EXE. RHI is a legacy distribution format; future PackageManager distribution would use Yak.
+- RhinoCommon plugin lifecycle source and pinned NuGet reference assemblies/XML: assembly GUID discovery, AtStartup, Idle, ToolbarFiles, group Visible, command aliases, ScriptRunner.
+- Structure comparison only: `Ennead-Architects-LLP/EA_Dist`, `Apps/_rhino/EnneadTab_For_Rhino_Classic.rui` and `Installation/EnneadTab_For_Rhino_Installer.rui`. Actual files confirmed RUI 3 attributes, bitmap mapping order and docking/group state. No source, scripts or artwork from that project are included; no redistribution license was established for its application files.
 
-## Real-host checks still required
+## Remaining real-host checks
 
-Use Windows Rhino 6 and 8 separately. Verify RHI installation and plugin recognition, automatic window after restart, logo rendering, click-to-capture, closing/reopening, checkbox persistence across restart, and Korean user paths. This Linux environment cannot execute Rhino or its Installer Engine. A successful build and package check does not prove those host behaviors.
+Windows Rhino 6 and 8: replace an existing installation through EXE, native installer cancel/rollback, registry export/import, actual native group and logo rendering, button capture, repeated install without duplicates, toolbar docking/placement after restart. Builds, metadata checks and filesystem tests passed on Linux; these Windows/Rhino checks remain unexecuted.
