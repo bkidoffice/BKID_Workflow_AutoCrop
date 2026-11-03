@@ -2,7 +2,8 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 
-bool setup = args.Length == 2;
+bool setup = args.Length == 4 && args[0] == "--setup";
+if (setup) args = args.Skip(1).ToArray();
 if (!setup && args.Length != 3) throw new ArgumentException("Usage: VerifyPlugin plugin.rhp capture.py icon.png");
 using var input = File.OpenRead(args[0]);
 using var pe = new PEReader(input);
@@ -38,8 +39,9 @@ if (setup)
 {
     if (!resources["BKID.Setup.Package.rhi"].SequenceEqual(File.ReadAllBytes(args[1])))
         throw new Exception("Setup embeds a different RHI.");
-    if (!resources.ContainsKey("BKID.Setup.Logo.png")) throw new Exception("Setup logo missing.");
-    Console.WriteLine("Verified Windows setup executable, version, embedded RHI and logo.");
+    if (!resources["BKID.Setup.Logo.png"].SequenceEqual(File.ReadAllBytes(args[2])))
+        throw new Exception("Setup artwork differs from the supplied original.");
+    Console.WriteLine("Verified Windows setup executable, version, embedded RHI and exact original wizard artwork.");
     return;
 }
 if (!resources["BKID.AutoCrop.Capture.py"].SequenceEqual(File.ReadAllBytes(args[1])))

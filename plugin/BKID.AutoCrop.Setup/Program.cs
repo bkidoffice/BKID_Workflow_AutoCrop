@@ -42,18 +42,41 @@ namespace BKID.AutoCrop.Setup
         private bool busy;
         public SetupWindow()
         {
-            Text = "BKID AutoCrop 2.1 설치";
-            ClientSize = new Size(420, 240);
-            Padding = new Padding(18);
+            Text = "BKID Workflowboost 2.1 설치";
+            ClientSize = new Size(760, 420);
+            Padding = new Padding(0);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             StartPosition = FormStartPosition.CenterScreen;
             using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("BKID.Setup.Logo.png"))
             using (var decoded = new Bitmap(stream))
                 logo = new Bitmap(decoded);
-            Controls.Add(status);
-            Controls.Add(new PictureBox { Image = logo, Height = 72, Dock = DockStyle.Top, SizeMode = PictureBoxSizeMode.Zoom });
-            Controls.Add(install);
+            var content = new Panel { Dock = DockStyle.Fill, Padding = new Padding(24) };
+            var title = new Label
+            {
+                Text = "BKID Workflowboost 설치",
+                Dock = DockStyle.Top,
+                Height = 54,
+                Font = new Font(SystemFonts.MessageBoxFont.FontFamily, 16, FontStyle.Bold)
+            };
+            content.Controls.Add(status);
+            content.Controls.Add(title);
+            content.Controls.Add(install);
+            var artwork = new Panel
+            {
+                Dock = DockStyle.Left,
+                Width = 300,
+                Padding = new Padding(8),
+                BackColor = Color.FromArgb(6, 8, 14)
+            };
+            artwork.Controls.Add(new PictureBox
+            {
+                Image = logo,
+                Dock = DockStyle.Fill,
+                SizeMode = PictureBoxSizeMode.Zoom
+            });
+            Controls.Add(content);
+            Controls.Add(artwork);
             status.Text = "Rhino를 종료한 뒤 설치하세요.\r\n기존 BKID 설치를 백업·제거하고 새 툴바 버전을 설치합니다.\r\nRhino Installer에서는 현재 사용자 설치를 선택하세요.";
             install.Click += InstallClicked;
             FormClosing += (sender, args) => { if (busy) args.Cancel = true; };
@@ -68,7 +91,7 @@ namespace BKID.AutoCrop.Setup
             try
             {
                 string backup = await Task.Run(() => new Reinstall().Run());
-                status.Text = "설치 완료. Rhino를 실행하면 BKID AutoCrop 툴바가 표시됩니다.\r\n이전 설치 백업:\r\n" + backup;
+                status.Text = "설치 완료. Rhino를 실행하면 BKID Workflowboost 툴바가 표시됩니다.\r\n이전 설치 백업:\r\n" + backup;
                 install.Text = "설치 완료";
             }
             catch (Exception error)

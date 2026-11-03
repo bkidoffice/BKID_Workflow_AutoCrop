@@ -18,6 +18,6 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
     <EmbeddedResource Include="../../installers/BKID_AutoCrop_2.1.0.rhi" LogicalName="BKID.Setup.Package.rhi" />
-    <EmbeddedResource Include="../../BKID_AutoCrop/assets/icon_64.png" LogicalName="BKID.Setup.Logo.png" />
+    <EmbeddedResource Include="../../BKID_AutoCrop/assets/WizardImage.png" LogicalName="BKID.Setup.Logo.png" />
   </ItemGroup>
 </Project>

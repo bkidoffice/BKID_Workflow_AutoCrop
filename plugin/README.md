@@ -45,3 +45,7 @@ The cleanup covers standard per-user Rhino 6/8 Plug-ins folders and previous BKI
 ## Remaining real-host checks
 
 Windows Rhino 6 and 8: replace an existing installation through EXE, native installer cancel/rollback, registry export/import, actual native group and logo rendering, button capture, repeated install without duplicates, toolbar docking/placement after restart. Builds, metadata checks and filesystem tests passed on Linux; these Windows/Rhino checks remain unexecuted.
+
+## Wizard artwork
+
+`BKID_AutoCrop/assets/WizardImage.png` is the unmodified PNG provided in `Workflowboost_download.zip` (2500 × 3334). Setup embeds it and displays it with PictureBox Zoom in the left artwork panel, preserving the full image and aspect ratio. The metadata verifier compares embedded artwork bytes against this source. The toolbar icon remains the separate AutoCrop icon. The actual Windows wizard appearance remains untested on this Linux machine.

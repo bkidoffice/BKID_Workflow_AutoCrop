@@ -38,3 +38,5 @@
 실기 확인 순서: Rhino 종료 → 기존 2.0 위에 EXE 설치 → Rhino 실행 → 별도 버튼 창이 아닌 툴바 표시 → 로고 버튼 캡처 → 도킹 → 재시작 → 툴바/위치 확인 → 다시 EXE 실행 → 중복 툴바 여부 확인.
 
 오류는 F2 기록의 `BKID AutoCrop toolbar startup:` 또는 설치 프로그램 오류 창과 백업 경로를 확인하세요.
+
+설치 마법사 왼쪽에는 제공된 `Workflowboost_download.png` 원본을 내장해 전체 비율로 표시합니다. 원본 파일은 `BKID_AutoCrop/assets/WizardImage.png`에 보존하며 설치 EXE에 같은 바이트가 포함되는지 빌드 과정에서 검사합니다. 툴바 버튼에는 기존 AutoCrop 로고가 적용됩니다.

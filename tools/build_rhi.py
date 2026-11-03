@@ -47,7 +47,7 @@ def main():
     subprocess.run([args.dotnet, 'restore', str(setup_project), '--locked-mode'], check=True)
     subprocess.run([args.dotnet, 'build', str(setup_project), '-c', 'Release', '--no-restore'], check=True)
     setup_binary = setup_project.parent / 'bin/Release/net45' / ('BKID_AutoCrop_Setup_' + VERSION + '.exe')
-    subprocess.run([args.dotnet, 'run', '--project', str(ROOT / 'tools/VerifyPlugin'), '-c', 'Release', '--', str(setup_binary), str(installer)], check=True)
+    subprocess.run([args.dotnet, 'run', '--project', str(ROOT / 'tools/VerifyPlugin'), '-c', 'Release', '--', '--setup', str(setup_binary), str(installer), str(ROOT / 'BKID_AutoCrop/assets/WizardImage.png')], check=True)
     subprocess.run([args.dotnet, 'run', '--project', str(ROOT / 'tools/TestSetup'), '-c', 'Release'], check=True)
     setup = destination / setup_binary.name
     shutil.copyfile(setup_binary, setup)
