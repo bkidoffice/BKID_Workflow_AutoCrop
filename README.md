@@ -13,14 +13,17 @@ Windows Rhino의 실제 **BKID Workflowboost** 툴바에서 로고 버튼으로 
 
 ## 설치 / 다시 설치 — 2.3
 
-1. [설치 프로그램 다운로드 (.exe)](https://github.com/bkidoffice/BKID_Workflow_AutoCrop/raw/refs/heads/main/installers/BKID_AutoCrop_Setup_2.3.0.exe)
+1. [설치 프로그램 다운로드 (.exe)](https://github.com/bkidoffice/BKID_Workflow_AutoCrop/raw/refs/heads/main/installers/BKID_AutoCrop_Setup_2.3.1.exe)
 2. Rhino를 모두 종료하고 실행 → **설치 / 다시 설치**
-3. 이어지는 Rhino Installer에서 **현재 사용자 설치** 완료
+3. 기존 설치가 있으면 **“설치되어 있습니다. 삭제하고 다시 설치할까요?”**에 예/아니요 선택
+4. 예를 선택했거나 처음 설치하는 경우, 이어지는 Rhino Installer에서 **현재 사용자 설치** 완료
 
-기존 BKID 버전은 **백업 없이 삭제**합니다. 새 설치가 취소되거나 실패해도 이전 버전은 자동 복원되지 않습니다. 저장된 PNG와 Rhino 모델은 삭제하지 않습니다.
+기존 설치에서 **예**를 선택하면 BKID 버전을 **백업 없이 삭제**합니다. **아니요**면 삭제·재설치 없이 그대로 유지합니다. 새 설치가 취소되거나 실패해도 이전 버전은 자동 복원되지 않습니다. 저장된 PNG와 Rhino 모델은 삭제하지 않습니다.
 
 툴바를 자동 표시하는 것은 이 사용자 설정에서 첫 실행 때 한 번뿐입니다. 도킹한 뒤에는 Rhino가 저장한 위치와 표시 상태를 따르며, 매번 별도 툴바 창을 강제로 열지 않습니다. 닫은 툴바는 `BKIDAutoCrop`으로 다시 표시할 수 있습니다.
 
 [자세한 설치·삭제 범위](installers/README_KO.md) · [개발자 빌드](plugin/README.md) · [캡처 엔진](BKID_AutoCrop/README_KO.md)
 
 빌드·패키지·파일 삭제 검사는 통과했습니다. 실제 Windows 설치·레지스트리 처리와 Rhino 재시작 후 도킹 상태는 아직 미검증입니다. 이전 보고의 보안 프로그램 위협 탐지 원인도 미확인입니다.
+
+2.3.1은 기존 툴바의 우클릭 연결도 갱신합니다. 업데이트 후에도 우클릭이 바로 저장된다면 `BKIDAutoCropRefresh`를 실행해 저장된 버튼 연결을 다시 읽을 수 있습니다.

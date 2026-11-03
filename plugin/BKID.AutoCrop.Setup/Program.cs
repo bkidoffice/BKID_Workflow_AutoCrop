@@ -42,7 +42,7 @@ namespace BKID.AutoCrop.Setup
         private bool busy;
         public SetupWindow()
         {
-            Text = "BKID Workflowboost 2.3 설치";
+            Text = "BKID Workflowboost 2.3.1 설치";
             ClientSize = new Size(760, 420);
             Padding = new Padding(0);
             FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -80,7 +80,7 @@ namespace BKID.AutoCrop.Setup
             // Keep the panel at the image aspect ratio, including after DPI scaling.
             ClientSizeChanged += (sender, args) =>
                 artwork.Width = (int)Math.Round(ClientSize.Height * (double)logo.Width / logo.Height);
-            status.Text = "Rhino를 종료한 뒤 설치하세요.\r\n기존 BKID 버전을 삭제하고 새 버전을 설치합니다.\r\n백업하지 않으며, 설치가 중단되어도 이전 버전은 복원되지 않습니다.\r\nRhino Installer에서는 현재 사용자 설치를 선택하세요.";
+            status.Text = "Rhino를 종료한 뒤 설치하세요.\r\n기존 설치가 있으면 삭제·재설치 여부를 먼저 확인합니다.\r\n백업하지 않으며, 설치가 중단되어도 이전 버전은 복원되지 않습니다.\r\nRhino Installer에서는 현재 사용자 설치를 선택하세요.";
             install.Click += InstallClicked;
             FormClosing += (sender, args) => { if (busy) args.Cancel = true; };
             FormClosed += (sender, args) => logo.Dispose();
@@ -93,7 +93,20 @@ namespace BKID.AutoCrop.Setup
             status.Text = "기존 설치를 확인하고 있습니다…\r\nRhino Installer가 열리면 설치를 진행해 주세요.";
             try
             {
-                await Task.Run(() => new Reinstall().Run());
+                var reinstaller = new Reinstall();
+                bool completed = await InstallWorkflow.RunAsync(
+                    reinstaller.IsInstalled,
+                    () => MessageBox.Show(this,
+                        "설치되어 있습니다. 삭제하고 다시 설치할까요?\r\n\r\n기존 버전은 백업하지 않습니다. 새 설치가 취소되거나 실패하면 자동 복원되지 않습니다.",
+                        "BKID Workflowboost 재설치", MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == DialogResult.Yes,
+                    reinstaller.Run);
+                if (!completed)
+                {
+                    status.Text = "기존 설치를 그대로 유지했습니다. 삭제하거나 재설치하지 않았습니다.";
+                    install.Enabled = true;
+                    return;
+                }
                 status.Text = "설치 완료. 툴바는 최초 실행 시 한 번 표시됩니다.\r\n이후에는 Rhino에 저장된 도킹·표시 상태를 따릅니다.";
                 install.Text = "설치 완료";
             }
@@ -114,13 +127,34 @@ namespace BKID.AutoCrop.Setup
         private readonly ManagedFiles managed = new ManagedFiles();
         private readonly List<string> registry = new List<string>();
 
-        internal void Run()
+        internal bool IsInstalled()
+        {
+            if (FindInstalledPlugins().Any()) return true;
+            foreach (var version in new[] { "6", "8" })
+                if (File.Exists(Path.Combine(roaming, "BKID", "AutoCrop", "Rhino" + version, "BKID_AutoCrop.py")))
+                    return true;
+            foreach (var version in new[] { "6.0", "8.0" })
+            foreach (var id in new[] { PluginId, "{" + PluginId + "}" })
+            foreach (var hive in new[] { Registry.CurrentUser, Registry.LocalMachine })
+            {
+                string path = @"Software\McNeel\Rhinoceros\" + version + @"\Plug-ins\" + id;
+                using (var key = hive.OpenSubKey(path))
+                {
+                    var file = key == null ? null : key.GetValue("FileName") as string;
+                    if (!string.IsNullOrEmpty(file) && File.Exists(file)) return true;
+                }
+            }
+            return false;
+        }
+
+        internal void Run(bool replacementAllowed)
         {
             if (Process.GetProcessesByName("Rhino").Length != 0)
                 throw new InvalidOperationException("열려 있는 Rhino를 모두 종료한 뒤 다시 설치하세요. 작업은 아직 변경하지 않았습니다.");
+            InstallWorkflow.RequireConsent(IsInstalled(), replacementAllowed);
             string temporary = Path.Combine(Path.GetTempPath(), "BKID_AutoCrop_Setup_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(temporary);
-            try { Install(temporary); }
+            try { Install(temporary, replacementAllowed); }
             finally
             {
                 // Remove only this run's extracted installer, never prior installations or user output.
@@ -130,9 +164,9 @@ namespace BKID.AutoCrop.Setup
             }
         }
 
-        private void Install(string temporary)
+        private void Install(string temporary, bool replacementAllowed)
         {
-            string package = Path.Combine(temporary, "BKID_AutoCrop_2.3.0.rhi");
+            string package = Path.Combine(temporary, "BKID_AutoCrop_2.3.1.rhi");
             using (var input = Assembly.GetExecutingAssembly().GetManifestResourceStream("BKID.Setup.Package.rhi"))
             using (var output = File.Create(package)) input.CopyTo(output);
             byte[] expectedPlugin;
@@ -170,10 +204,12 @@ namespace BKID.AutoCrop.Setup
             foreach (var version in new[] { "6", "8" })
             foreach (var name in new[] { "BKID_AutoCrop.py", "Show_AutoCrop.py", "BKID_AutoCrop.rui", "assets/BKID_AutoCrop_Icon.svg", "assets/icon_32.png" })
                 files.Add(Path.Combine(roaming, "BKID", "AutoCrop", "Rhino" + version, name.Replace('/', Path.DirectorySeparatorChar)));
-            foreach (var version in new[] { "2.0.0", "2.1.0", "2.2.0", "2.3.0" })
+            foreach (var version in new[] { "2.0.0", "2.1.0", "2.2.0", "2.3.0", "2.3.1" })
             foreach (var name in new[] { "BKID_AutoCrop.py", "BKID_AutoCrop_x2.py", "BKID_AutoCrop_x3.py", "BKID_AutoCrop_x4.py" })
                 files.Add(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BKID", "AutoCrop", "runtime", version, name));
             managed.Validate(files);
+            // A new installation may have appeared since the wizard checked.
+            InstallWorkflow.RequireConsent(IsInstalled(), replacementAllowed);
             try
             {
                 foreach (var file in files) managed.Remove(file);

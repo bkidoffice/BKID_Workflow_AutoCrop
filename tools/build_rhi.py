@@ -9,7 +9,7 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '2.3.0'
+VERSION = '2.3.1'
 PROJECT = ROOT / 'plugin/BKID.AutoCrop/BKID.AutoCrop.csproj'
 
 
@@ -51,6 +51,7 @@ def main():
     subprocess.run([args.dotnet, 'run', '--project', str(ROOT / 'tools/VerifyPlugin'), '-c', 'Release', '--', '--setup', str(setup_binary), str(installer), str(ROOT / 'BKID_AutoCrop/assets/WizardImage.png')], check=True)
     subprocess.run([args.dotnet, 'run', '--project', str(ROOT / 'tools/TestSetup'), '-c', 'Release'], check=True)
     subprocess.run([args.dotnet, 'run', '--project', str(ROOT / 'tools/TestCapture'), '-c', 'Release', '--', sys.executable], check=True)
+    subprocess.run([args.dotnet, 'run', '--project', str(ROOT / 'tools/TestToolbar'), '-c', 'Release', '--', str(toolbar)], check=True)
     setup = destination / setup_binary.name
     shutil.copyfile(setup_binary, setup)
     print('Built and verified', installer.relative_to(ROOT), 'and', setup.relative_to(ROOT))

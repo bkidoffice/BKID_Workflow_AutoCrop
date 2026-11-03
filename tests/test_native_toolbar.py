@@ -39,7 +39,7 @@ class NativeToolbarTests(unittest.TestCase):
                 self.assertEqual(png.getpixel((0, 0))[3], 0)
 
     def test_rhi_contains_matching_named_plugin_and_toolbar(self):
-        with zipfile.ZipFile(ROOT / 'installers/BKID_AutoCrop_2.3.0.rhi') as archive:
+        with zipfile.ZipFile(ROOT / 'installers/BKID_AutoCrop_2.3.1.rhi') as archive:
             self.assertIsNone(archive.testzip())
             self.assertEqual(set(archive.namelist()), {'BKID.AutoCrop.rhp', 'BKID.AutoCrop.rui'})
             self.assertTrue(archive.read('BKID.AutoCrop.rhp').startswith(b'MZ'))

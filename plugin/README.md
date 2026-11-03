@@ -1,4 +1,4 @@
-# Native toolbar and deletion-first installer — 2.3.0
+# Native toolbar and deletion-first installer — 2.3.1
 
 ## Build
 
@@ -10,7 +10,7 @@ python3 tools/build_rhi.py
 
 An SDK outside PATH can be passed with `--dotnet /path/to/dotnet`. Locked dependencies compile a RhinoCommon 6.35 / .NET Framework 4.5 RHP and an x64 Windows setup EXE. The builder verifies metadata, embedded capture/logo/image bytes, RHI contents and shared managed-file deletion tests. `python3 -m unittest discover -s tests -v` additionally runs legacy installer and native RUI checks (Pillow required).
 
-Outputs: `installers/BKID_AutoCrop_Setup_2.3.0.exe` and `installers/BKID_AutoCrop_2.3.0.rhi`. Host SDK DLLs are not distributed. The EXE is not Authenticode signed; a previously reported security-product threat detection remains undiagnosed.
+Outputs: `installers/BKID_AutoCrop_Setup_2.3.1.exe` and `installers/BKID_AutoCrop_2.3.1.rhi`. Host SDK DLLs are not distributed. The EXE is not Authenticode signed; a previously reported security-product threat detection remains undiagnosed.
 
 ## Deletion-first setup
 
@@ -43,3 +43,11 @@ The native button's left macro still invokes `BKIDAutoCropCapture`. The right ma
 The original capture command uses the default 1x script. High-resolution capture writes a small relative-path runner built by `CaptureRunner.cs`, loads the capture module with standard-library runpy and calls `run(capture_scale=N)`. It does not rewrite CAPTURE_SCALE or persist the chosen scale. The capture engine passes the per-call factor to ViewCapture.Width/Height before rendering. PNG crop/alpha verification and 1px margins remain unchanged.
 
 `tools/TestCapture` links the real C# runner generator and executes its outputs under Python at Korean/space-containing paths, checking x2/x3/x4 argument delivery, unchanged source/defaults and invalid factor rejection. Python capture tests exercise scaled ViewCapture settings under a mock Rhino host, default 1x after high-resolution calls, finite-scale validation, fixed margins and selection restoration on errors. These do not execute IronPython, System.Drawing, actual Rhino rendering or the Eto dialog. All require Windows Rhino 6/8 host validation separately.
+
+## 2.3.1: confirmation and saved-toolbar migration
+
+The setup uses `InstallWorkflow.RunAsync`: detection is read-only, the Yes/No question resumes on the WinForms UI context, and the destructive install action is called only after Yes when an existing installation is present. No returns without calling the install action. A fresh install skips the question, but the backend rechecks before deletion and rejects a newly discovered existing installation unless replacement was approved. The question defaults to No. Shared workflow tests exercise real file preservation/replacement and the no-consent guard.
+
+The reported symptom—right-click immediately performing the old capture—indicates a stale saved button binding rather than a displayed scale dialog. Existing toolbar collections can retain old left/right IDs even when the installed RUI has changed. On the first UI-idle pass for binding revision `right-resolution-1`, the plugin identifies loaded collections containing our capture command, saves the current layout, patches only the AutoCrop right macro, and reopens the collection to refresh cached controls. It also recognizes copied buttons with new IDs by their exact capture command. Group docking XML, visibility, left click and unrelated buttons are preserved; collections with no AutoCrop button are not saved/reopened. After successful migration the revision is persisted, so this reload is not repeated on every launch. A correct on-disk RUI still gets a one-time reload if it contains our button, because in-memory controls can be stale.
+
+`BKIDAutoCropRefresh` manually repeats this scoped refresh without intentionally floating/showing the toolbar. No new standalone capture window is added. RUI save/reload and actual docking preservation need Windows Rhino validation; XML-level tests do not prove native UI behavior.

@@ -13,6 +13,8 @@ namespace BKID.AutoCrop
     [Guid("3881C10B-30A8-4FE5-BB48-9E53A6FEA1F4")]
     public sealed class AutoCropPlugin : PlugIn
     {
+        private const string BindingRevision = "right-resolution-1";
+        private const string BindingRevisionKey = "ToolbarBindingRevision";
         private const string ToolbarInitializedKey = "NativeToolbarInitialized";
         private bool waitingForStartup;
         private int startupAttempts;
@@ -23,8 +25,9 @@ namespace BKID.AutoCrop
 
         protected override LoadReturnCode OnLoad(ref string errorMessage)
         {
+            RhinoApp.WriteLine("BKID Workflowboost " + GetType().Assembly.GetName().Version + " loaded.");
             // Afterwards Rhino restores the user's docking and visibility state.
-            if (!Settings.GetBool(ToolbarInitializedKey, false))
+            if (!Settings.GetBool(ToolbarInitializedKey, false) || Settings.GetString(BindingRevisionKey, "") != BindingRevision)
             {
                 waitingForStartup = true;
                 RhinoApp.Idle += OnStartupIdle;
@@ -40,7 +43,8 @@ namespace BKID.AutoCrop
             try
             {
                 if (startupAttempts == 1) RemoveLegacyRegistration();
-                ShowToolbar();
+                if (Settings.GetString(BindingRevisionKey, "") != BindingRevision) RefreshToolbarBindings();
+                if (!Settings.GetBool(ToolbarInitializedKey, false)) ShowToolbar();
                 StopWaitingForStartup();
             }
             catch (Exception error)
@@ -78,6 +82,14 @@ namespace BKID.AutoCrop
             if (old != null) old.Close(false);
         }
 
+        internal void RefreshToolbarBindings()
+        {
+            var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "BKID.AutoCrop.rui");
+            int refreshed = ToolbarRefresh.Apply(path);
+            RhinoApp.WriteLine("AutoCrop toolbar binding refresh: " + refreshed + " collection(s).");
+            Settings.SetString(BindingRevisionKey, BindingRevision);
+        }
+
         internal void ShowToolbar()
         {
             var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "BKID.AutoCrop.rui");
@@ -102,7 +114,7 @@ namespace BKID.AutoCrop
         {
             if (scale < 1 || scale > 4) throw new ArgumentOutOfRangeException("scale");
             var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                                      "BKID", "AutoCrop", "runtime", "2.3.0");
+                                      "BKID", "AutoCrop", "runtime", "2.3.1");
             Directory.CreateDirectory(folder);
             var target = Path.Combine(folder, "BKID_AutoCrop.py");
             using (var input = Assembly.GetExecutingAssembly().GetManifestResourceStream("BKID.AutoCrop.Capture.py"))
@@ -132,6 +144,22 @@ namespace BKID.AutoCrop
         {
             try { AutoCropPlugin.Instance.ShowToolbar(); return Result.Success; }
             catch (Exception error) { RhinoApp.WriteLine("BKID AutoCrop: " + error); return Result.Failure; }
+        }
+    }
+
+    [Guid("6D052703-1374-40E0-91BE-AC84F3BF03EB")]
+    public sealed class AutoCropRefreshCommand : Command
+    {
+        public override string EnglishName { get { return "BKIDAutoCropRefresh"; } }
+        protected override Result RunCommand(RhinoDoc doc, RunMode mode)
+        {
+            try
+            {
+                AutoCropPlugin.Instance.RefreshToolbarBindings();
+                RhinoApp.WriteLine("AutoCrop: resolution dialog command is BKIDAutoCropResolution.");
+                return Result.Success;
+            }
+            catch (Exception error) { RhinoApp.WriteLine("AutoCrop toolbar update: " + error); return Result.Failure; }
         }
     }
 

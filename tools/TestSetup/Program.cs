@@ -34,5 +34,38 @@ try
     Assert(refused && File.Exists(previous), "Read-only file should fail preflight without deletion.");
     File.SetAttributes(previous, FileAttributes.Normal);
     Console.WriteLine("PASS: read-only installation rejected before deletion.");
+    // Exercise the same asynchronous confirmation flow used by the real wizard.
+    int questions = 0;
+    bool ran = false;
+    File.WriteAllText(previous, "existing version");
+    bool completed = await InstallWorkflow.RunAsync(
+        () => File.Exists(previous),
+        () => { questions++; return false; },
+        allowed => { ran = true; managed.Remove(previous); });
+    Assert(!completed && !ran && questions == 1 && File.ReadAllText(previous) == "existing version",
+           "No must leave the old installation unchanged and never enter installation.");
+
+    completed = await InstallWorkflow.RunAsync(
+        () => File.Exists(previous), () => true,
+        allowed =>
+        {
+            InstallWorkflow.RequireConsent(File.Exists(previous), allowed);
+            managed.Remove(previous);
+            File.WriteAllText(previous, "new version");
+        });
+    Assert(completed && File.ReadAllText(previous) == "new version", "Yes must allow deletion and replacement.");
+
+    managed.Remove(previous);
+    completed = await InstallWorkflow.RunAsync(
+        () => File.Exists(previous), () => throw new Exception("Fresh install must not ask for replacement."),
+        allowed => { Assert(!allowed, "Fresh install has no replacement consent."); File.WriteAllText(previous, "fresh"); });
+    Assert(completed && File.ReadAllText(previous) == "fresh", "Fresh installation did not run.");
+
+    bool rejectedRace = false;
+    try { InstallWorkflow.RequireConsent(true, false); }
+    catch (InvalidOperationException) { rejectedRace = true; }
+    Assert(rejectedRace, "A newly detected installation must not be deleted without confirmation.");
+    Console.WriteLine("PASS: actual wizard workflow preserves existing files on No, replaces on Yes, skips prompt for fresh installs and rejects unapproved new installations.");
+
 }
 finally { Directory.Delete(root, true); }

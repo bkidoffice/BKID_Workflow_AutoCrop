@@ -4,7 +4,7 @@
     <TargetExt>.rhp</TargetExt>
     <AssemblyName>BKID.AutoCrop</AssemblyName>
     <RootNamespace>BKID.AutoCrop</RootNamespace>
-    <Version>2.3.0</Version>
+    <Version>2.3.1</Version>
     <AssemblyTitle>BKID AutoCrop</AssemblyTitle>
     <Description>Transparent viewport capture with an native BKID toolbar.</Description>
     <Company>BKID</Company>
@@ -15,6 +15,7 @@
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="System.Xml.Linq" />
     <PackageReference Include="RhinoCommon" Version="6.35.21222.17001" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
     <EmbeddedResource Include="../../BKID_AutoCrop/BKID_AutoCrop.py" LogicalName="BKID.AutoCrop.Capture.py" />
