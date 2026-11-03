@@ -97,6 +97,13 @@ namespace BKID.AutoCrop.Setup
                 status.Text = "설치 완료. Rhino를 실행하면 BKID Workflowboost 툴바가 표시됩니다.\r\n이전 설치 백업:\r\n" + backup;
                 install.Text = "설치 완료";
             }
+            catch (RestoreCompletedException restored)
+            {
+                status.Text = "복원 완료. 이전 설치 상태로 정상적으로 되돌렸습니다.\r\n새 버전 설치는 완료되지 않았습니다.\r\n백업: " + restored.BackupFolder;
+                MessageBox.Show(this, restored.Message, "BKID Workflowboost — 복원 완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                install.Text = "다시 설치";
+                install.Enabled = true;
+            }
             catch (Exception error)
             {
                 status.Text = "설치하지 못했습니다. 아래 오류를 확인하세요.";
@@ -104,6 +111,16 @@ namespace BKID.AutoCrop.Setup
                 install.Enabled = true;
             }
             finally { busy = false; }
+        }
+    }
+
+    internal sealed class RestoreCompletedException : Exception
+    {
+        internal string BackupFolder { get; private set; }
+        internal RestoreCompletedException(string backup, Exception cause)
+            : base("이전 설치 상태로 정상적으로 복원했습니다.\r\n새 버전 설치는 완료되지 않았습니다.\r\n\r\n설치 중 안내: " + cause.Message + "\r\n백업: " + backup, cause)
+        {
+            BackupFolder = backup;
         }
     }
 
@@ -195,7 +212,7 @@ namespace BKID.AutoCrop.Setup
                 {
                     throw new InvalidOperationException(original.Message + "\r\n자동 복구를 완료하지 못했습니다: " + restore.Message + "\r\n백업: " + backup, original);
                 }
-                throw new InvalidOperationException(original.Message + "\r\n이전 설치 파일과 등록 정보를 복원했습니다.\r\n백업: " + backup, original);
+                throw new RestoreCompletedException(backup, original);
             }
         }
 
