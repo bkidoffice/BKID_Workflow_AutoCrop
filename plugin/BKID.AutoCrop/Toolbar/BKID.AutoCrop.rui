@@ -32,7 +32,7 @@
           <locale_1033>AutoCrop</locale_1033>
         </text>
         <left_macro_id>654e9b41-09dc-51b6-8de2-4ee942d03864</left_macro_id>
-        <right_macro_id>654e9b41-09dc-51b6-8de2-4ee942d03864</right_macro_id>
+        <right_macro_id>53aacf32-164e-5460-805d-39f1df08e28d</right_macro_id>
       </tool_bar_item>
     </tool_bar>
   </tool_bars>
@@ -42,10 +42,10 @@
         <locale_1033>AutoCrop</locale_1033>
       </text>
       <tooltip>
-        <locale_1033>AutoCrop: transparent PNG / 1px margin</locale_1033>
+        <locale_1033>좌클릭: 바로 저장 / 우클릭: ×2·×3·×4 해상도 선택</locale_1033>
       </tooltip>
       <help_text>
-        <locale_1033>Capture the active model viewport</locale_1033>
+        <locale_1033>Capture transparent PNG with 1px margin</locale_1033>
       </help_text>
       <button_text>
         <locale_1033>AutoCrop</locale_1033>
@@ -54,6 +54,24 @@
         <locale_1033>AutoCrop</locale_1033>
       </menu_text>
       <script>! _BKIDAutoCropCapture</script>
+    </macro_item>
+    <macro_item guid="53aacf32-164e-5460-805d-39f1df08e28d" bitmap_id="f5f6e247-44da-5c99-9882-ac2ad81b7a37">
+      <text>
+        <locale_1033>AutoCrop 해상도 선택</locale_1033>
+      </text>
+      <tooltip>
+        <locale_1033>좌클릭: 바로 저장 / 우클릭: ×2·×3·×4 해상도 선택</locale_1033>
+      </tooltip>
+      <help_text>
+        <locale_1033>Capture transparent PNG with 1px margin</locale_1033>
+      </help_text>
+      <button_text>
+        <locale_1033>AutoCrop 해상도 선택</locale_1033>
+      </button_text>
+      <menu_text>
+        <locale_1033>AutoCrop 해상도 선택</locale_1033>
+      </menu_text>
+      <script>! _BKIDAutoCropResolution</script>
     </macro_item>
   </macros>
   <bitmaps>

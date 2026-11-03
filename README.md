@@ -4,9 +4,16 @@
 
 Windows Rhino의 실제 **BKID Workflowboost** 툴바에서 로고 버튼으로 투명 PNG를 저장합니다.
 
-## 설치 / 다시 설치 — 2.2
+## 툴바 버튼
 
-1. [설치 프로그램 다운로드 (.exe)](https://github.com/bkidoffice/BKID_Workflow_AutoCrop/raw/refs/heads/main/installers/BKID_AutoCrop_Setup_2.2.0.exe)
+- **좌클릭**: 기존 1배 자동 크롭·PNG 저장을 바로 실행합니다.
+- **우클릭**: ×2·×3·×4 해상도 선택 창을 엽니다. 배율을 선택하면 바로 저장하며, 취소하면 저장하지 않습니다.
+
+배율은 캡처의 가로·세로 해상도에 적용합니다. 선택은 그 캡처에만 적용되어 다음 좌클릭은 1배입니다. 최종 크기는 자동 크롭에 따라 달라지며 투명 여백은 배율과 관계없이 사방 1px입니다.
+
+## 설치 / 다시 설치 — 2.3
+
+1. [설치 프로그램 다운로드 (.exe)](https://github.com/bkidoffice/BKID_Workflow_AutoCrop/raw/refs/heads/main/installers/BKID_AutoCrop_Setup_2.3.0.exe)
 2. Rhino를 모두 종료하고 실행 → **설치 / 다시 설치**
 3. 이어지는 Rhino Installer에서 **현재 사용자 설치** 완료
 

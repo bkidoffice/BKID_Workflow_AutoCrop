@@ -1,4 +1,4 @@
-# Native toolbar and deletion-first installer — 2.2.0
+# Native toolbar and deletion-first installer — 2.3.0
 
 ## Build
 
@@ -10,7 +10,7 @@ python3 tools/build_rhi.py
 
 An SDK outside PATH can be passed with `--dotnet /path/to/dotnet`. Locked dependencies compile a RhinoCommon 6.35 / .NET Framework 4.5 RHP and an x64 Windows setup EXE. The builder verifies metadata, embedded capture/logo/image bytes, RHI contents and shared managed-file deletion tests. `python3 -m unittest discover -s tests -v` additionally runs legacy installer and native RUI checks (Pillow required).
 
-Outputs: `installers/BKID_AutoCrop_Setup_2.2.0.exe` and `installers/BKID_AutoCrop_2.2.0.rhi`. Host SDK DLLs are not distributed. The EXE is not Authenticode signed; a previously reported security-product threat detection remains undiagnosed.
+Outputs: `installers/BKID_AutoCrop_Setup_2.3.0.exe` and `installers/BKID_AutoCrop_2.3.0.rhi`. Host SDK DLLs are not distributed. The EXE is not Authenticode signed; a previously reported security-product threat detection remains undiagnosed.
 
 ## Deletion-first setup
 
@@ -35,3 +35,11 @@ The RUI has the same basename as the RHP, a stable GUID namespace and a native `
 References inspected: McNeel's official [toolbar deployment guide](https://developer.rhino3d.com/guides/rhinocommon/create-deploy-plugin-toolbar/), [Installer Engine guide](https://developer.rhino3d.com/guides/general/rhino-installer-engine/), RhinoCommon lifecycle source and pinned NuGet reference assemblies/XML. RUI structure was compared with `Ennead-Architects-LLP/EA_Dist`'s actual classic RUI files; no scripts, artwork or application code were copied from that project.
 
 Windows real-host checks still required: deletion/reinstallation, registry handling, initial toolbar appearance, docking and hiding followed by restart without forced reopening, manual reopen, capture and security-product detection diagnosis. Linux build and file checks do not validate these host behaviors.
+
+## Capture scale selection (2.3)
+
+The native button's left macro still invokes `BKIDAutoCropCapture`. The right macro now invokes `BKIDAutoCropResolution`, a separate ScriptRunner command. Its Eto `Dialog<int>` has x2/x3/x4 buttons; choosing one closes the modal before capture. AbortButton, Esc and window close return cancellation. Nothing is extracted or captured on cancellation. Eto Dialog.Close(T), ShowModal(Control) and AbortButton were checked in the pinned Rhino 6 SDK's Eto XML and compiled reference assemblies.
+
+The original capture command uses the default 1x script. High-resolution capture writes a small relative-path runner built by `CaptureRunner.cs`, loads the capture module with standard-library runpy and calls `run(capture_scale=N)`. It does not rewrite CAPTURE_SCALE or persist the chosen scale. The capture engine passes the per-call factor to ViewCapture.Width/Height before rendering. PNG crop/alpha verification and 1px margins remain unchanged.
+
+`tools/TestCapture` links the real C# runner generator and executes its outputs under Python at Korean/space-containing paths, checking x2/x3/x4 argument delivery, unchanged source/defaults and invalid factor rejection. Python capture tests exercise scaled ViewCapture settings under a mock Rhino host, default 1x after high-resolution calls, finite-scale validation, fixed margins and selection restoration on errors. These do not execute IronPython, System.Drawing, actual Rhino rendering or the Eto dialog. All require Windows Rhino 6/8 host validation separately.

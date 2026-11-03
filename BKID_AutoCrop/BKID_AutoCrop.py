@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-"""BKID AutoCrop 1.1 - Windows Rhino 6 and 8, IronPython 2.7.
+"""BKID AutoCrop 1.2 - Windows Rhino 6 and 8, IronPython 2.7.
 Run with _RunPythonScript. No third-party Python packages required.
 """
+import math
 import os
 import sys
 import traceback
@@ -21,7 +22,7 @@ def initialize_runtime():
     import Rhino
     if System.Environment.OSVersion.Platform != System.PlatformID.Win32NT:
         raise RuntimeError(u"이 버전은 Windows 전용입니다.")
-    Rhino.RhinoApp.WriteLine("BKID AutoCrop 1.1 | Rhino {0} | IronPython {1}".format(
+    Rhino.RhinoApp.WriteLine("BKID AutoCrop 1.2 | Rhino {0} | IronPython {1}".format(
         Rhino.RhinoApp.Version, sys.version.split()[0]))
 
 
@@ -100,8 +101,24 @@ def bitmap_bounds(bitmap):
         bitmap.UnlockBits(data)
 
 
-def capture(doc, view):
+def resolve_capture_scale(capture_scale=None):
+    scale = float(CAPTURE_SCALE if capture_scale is None else capture_scale)
+    if scale <= 0 or math.isnan(scale) or math.isinf(scale):
+        raise ValueError("Capture scale must be a finite number greater than zero")
+    return scale
+
+
+def capture_dimensions(width, height, capture_scale=None):
+    scale = resolve_capture_scale(capture_scale)
+    return (max(1, int(round(width * scale))),
+            max(1, int(round(height * scale))))
+
+
+def capture(doc, view, capture_scale=None):
     import Rhino
+    width, height = capture_dimensions(view.ActiveViewport.Size.Width,
+                                       view.ActiveViewport.Size.Height,
+                                       capture_scale)
     selected = list(doc.Objects.GetSelectedObjects(False, False))
     states = [(obj, obj.IsSelected(False), list(obj.GetSelectedSubObjects() or []))
               for obj in selected]
@@ -113,8 +130,8 @@ def capture(doc, view):
                 obj.Select(False)
         view.Redraw()
         settings = Rhino.Display.ViewCapture()
-        settings.Width = max(1, int(round(view.ActiveViewport.Size.Width * CAPTURE_SCALE)))
-        settings.Height = max(1, int(round(view.ActiveViewport.Size.Height * CAPTURE_SCALE)))
+        settings.Width = width
+        settings.Height = height
         settings.ScaleScreenItems = False
         settings.DrawAxes = False
         settings.DrawGrid = False
@@ -130,7 +147,8 @@ def capture(doc, view):
         view.Redraw()
 
 
-def run():
+def run(capture_scale=None):
+    scale = resolve_capture_scale(capture_scale)
     initialize_runtime()
     verify_bitmap_runtime()
     import Rhino
@@ -146,9 +164,6 @@ def run():
         raise RuntimeError(u"활성 모델 뷰포트가 없습니다.")
     if isinstance(view, Rhino.Display.RhinoPageView):
         raise RuntimeError(u"Layout 대신 모델 뷰포트에서 실행해 주세요.")
-    if CAPTURE_SCALE <= 0:
-        raise RuntimeError(u"CAPTURE_SCALE은 0보다 커야 합니다.")
-
     folder = OUTPUT_FOLDER or os.path.join(
         System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop),
         "BKID_Captures")
@@ -161,7 +176,7 @@ def run():
     temporary_path = final_path + ".part"
     source = cropped = output = check = None
     try:
-        source = capture(doc, view)
+        source = capture(doc, view, scale)
         if source is None:
             raise RuntimeError(u"Rhino가 캡처 이미지를 반환하지 않았습니다.")
         bounds = bitmap_bounds(source)

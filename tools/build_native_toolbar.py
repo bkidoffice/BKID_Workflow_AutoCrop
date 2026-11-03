@@ -41,12 +41,17 @@ def build():
     button = E.SubElement(bar, 'tool_bar_item', guid=guid('button'))
     label(button, 'text', 'AutoCrop')
     E.SubElement(button, 'left_macro_id').text = guid('capture')
-    E.SubElement(button, 'right_macro_id').text = guid('capture')
-    macro = E.SubElement(E.SubElement(r, 'macros'), 'macro_item', guid=guid('capture'), bitmap_id=guid('icon'))
-    for tag, value in [('text', 'AutoCrop'), ('tooltip', 'AutoCrop: transparent PNG / 1px margin'),
-                       ('help_text', 'Capture the active model viewport'), ('button_text', 'AutoCrop'), ('menu_text', 'AutoCrop')]:
-        label(macro, tag, value)
-    E.SubElement(macro, 'script').text = '! _BKIDAutoCropCapture'
+    E.SubElement(button, 'right_macro_id').text = guid('resolution')
+    macros = E.SubElement(r, 'macros')
+    for key, command, caption in [('capture', 'BKIDAutoCropCapture', 'AutoCrop'),
+                                   ('resolution', 'BKIDAutoCropResolution', 'AutoCrop 해상도 선택')]:
+        macro = E.SubElement(macros, 'macro_item', guid=guid(key), bitmap_id=guid('icon'))
+        for tag, value in [('text', caption),
+                           ('tooltip', '좌클릭: 바로 저장 / 우클릭: ×2·×3·×4 해상도 선택'),
+                           ('help_text', 'Capture transparent PNG with 1px margin'),
+                           ('button_text', caption), ('menu_text', caption)]:
+            label(macro, tag, value)
+        E.SubElement(macro, 'script').text = '! _' + command
     bitmaps = E.SubElement(r, 'bitmaps')
     for name, size in [('small', 16), ('normal', 24), ('large', 32)]:
         bitmap = E.SubElement(bitmaps, name + '_bitmap', item_width=str(size), item_height=str(size))

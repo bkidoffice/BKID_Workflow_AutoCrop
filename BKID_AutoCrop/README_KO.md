@@ -1,4 +1,4 @@
-# BKID AutoCrop 1.1 — Rhino 6 / 8 공통판
+# BKID AutoCrop — Rhino 6 / 8 캡처 엔진
 
 Windows Rhino용 자동 투명 PNG 캡처 실행 스크립트입니다. 컴파일된 .rhp 플러그인이 아닌 버튼 등록형 Python 도구입니다.
 
@@ -121,3 +121,9 @@ Python 3에서 `python -m pip install CairoSVG==2.8.2 Pillow` 후 저장소 루�
 McNeel 공식 저장소의 `rhinopython/SampleEtoModelessForm.py`에서 Form.Owner/Show, scriptcontext.sticky를 통한 수명 유지, 버튼 이벤트의 RhinoApp.RunScript 호출 흐름을 확인했습니다. 해당 예제의 Python 3 전용 문법을 복제하지 않고 IronPython 2.7 호환 코드로 작성했습니다.
 
 모의 테스트 12개 통과. 추가 검증은 이름 기반 조회 없이 기본 툴바 표시, 기본 툴바 실패 시 대체 창 호출 및 명령 유지, 로고 창 중복 방지·클릭·닫기·재열기를 포함합니다. Windows Rhino 6/8에서 기본 툴바와 Eto 창의 실기 검증은 여전히 미실행입니다.
+
+## 캡처 엔진 1.2 / 정식 플러그인 2.3
+
+정식 플러그인에서는 좌클릭이 기존 1배 캡처, 우클릭이 ×2·×3·×4 선택 창입니다. 선택하면 그 배율로 한 번 캡처하며, 취소하면 저장하지 않습니다. 다음 좌클릭은 1배로 돌아갑니다. `run(capture_scale=N)`은 그 호출의 캡처 해상도만 변경하며 전역 `CAPTURE_SCALE` 설정은 바꾸지 않습니다. 크롭 후 여백은 언제나 사방 1px입니다.
+
+Python 단독/이전 설치 스크립트는 계속 기본 `run()` 경로를 사용합니다. 좌우 버튼과 선택 창은 정식 2.3 RHI/EXE 플러그인에서 제공됩니다. 실제 Rhino 실행 검증 상태는 설치 안내를 참고하세요.

@@ -98,10 +98,11 @@ namespace BKID.AutoCrop
             StopWaitingForStartup();
         }
 
-        internal string PrepareCaptureScript()
+        internal string PrepareCaptureScript(int scale)
         {
+            if (scale < 1 || scale > 4) throw new ArgumentOutOfRangeException("scale");
             var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                                      "BKID", "AutoCrop", "runtime", "2.2.0");
+                                      "BKID", "AutoCrop", "runtime", "2.3.0");
             Directory.CreateDirectory(folder);
             var target = Path.Combine(folder, "BKID_AutoCrop.py");
             using (var input = Assembly.GetExecutingAssembly().GetManifestResourceStream("BKID.AutoCrop.Capture.py"))
@@ -110,7 +111,10 @@ namespace BKID.AutoCrop
                 using (var output = new FileStream(target, FileMode.Create, FileAccess.Write, FileShare.Read))
                     input.CopyTo(output);
             }
-            return target;
+            if (scale == 1) return target;
+            var runner = Path.Combine(folder, "BKID_AutoCrop_x" + scale + ".py");
+            File.WriteAllText(runner, CaptureRunner.Build(scale), new System.Text.UTF8Encoding(false));
+            return runner;
         }
 
         protected override void OnShutdown()
@@ -138,10 +142,43 @@ namespace BKID.AutoCrop
         public override string EnglishName { get { return "BKIDAutoCropCapture"; } }
         protected override Result RunCommand(RhinoDoc doc, RunMode mode)
         {
+            return CaptureExecution.Run(doc, 1);
+        }
+    }
+
+    [Guid("EB3D4348-12E2-49A3-B36C-940FE280DADB")]
+    [CommandStyle(Style.ScriptRunner)]
+    public sealed class AutoCropResolutionCommand : Command
+    {
+        public override string EnglishName { get { return "BKIDAutoCropResolution"; } }
+        protected override Result RunCommand(RhinoDoc doc, RunMode mode)
+        {
+            var view = doc == null ? null : doc.Views.ActiveView;
+            if (view == null || view is Rhino.Display.RhinoPageView)
+            {
+                RhinoApp.WriteLine("AutoCrop: use an active model viewport.");
+                return Result.Failure;
+            }
+            try
+            {
+                int scale;
+                using (var dialog = new CaptureScaleDialog(view.ActiveViewport.Size.Width, view.ActiveViewport.Size.Height))
+                    scale = dialog.ShowModal(RhinoEtoApp.MainWindow);
+                if (scale < 2 || scale > 4) return Result.Cancel;
+                return CaptureExecution.Run(doc, scale);
+            }
+            catch (Exception error) { RhinoApp.WriteLine("BKID AutoCrop: " + error); return Result.Failure; }
+        }
+    }
+
+    internal static class CaptureExecution
+    {
+        internal static Result Run(RhinoDoc doc, int scale)
+        {
             if (doc == null) return Result.Failure;
             try
             {
-                var path = AutoCropPlugin.Instance.PrepareCaptureScript();
+                var path = AutoCropPlugin.Instance.PrepareCaptureScript(scale);
                 return RhinoApp.RunScript("_-RunPythonScript \"" + path + "\"", false)
                     ? Result.Success : Result.Failure;
             }
