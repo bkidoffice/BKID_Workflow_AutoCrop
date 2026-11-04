@@ -1,4 +1,4 @@
-# Native toolbar and deletion-first installer — 2.4.2
+# Native toolbar and deletion-first installer — 2.5.0
 
 ## Build
 
@@ -10,7 +10,7 @@ python3 tools/build_rhi.py
 
 An SDK outside PATH can be passed with `--dotnet /path/to/dotnet`. Locked dependencies compile a RhinoCommon 6.0.18016.23451 / .NET Framework 4.5 RHP and an x64 Windows setup EXE. The builder verifies metadata, embedded capture/logo/image bytes, RHI contents and shared managed-file deletion tests. `python3 -m unittest discover -s tests -v` additionally runs legacy installer and native RUI checks (Pillow required).
 
-Outputs: `installers/BKID_AutoCrop_Setup_2.4.2.exe` and `installers/BKID_AutoCrop_2.4.2.rhi`. Host SDK DLLs are not distributed. The EXE is not Authenticode signed; a previously reported security-product threat detection remains undiagnosed.
+Outputs: `installers/BKID_AutoCrop_Setup_2.5.0.exe` and `installers/BKID_AutoCrop_2.5.0.rhi`. Host SDK DLLs are not distributed. The EXE is not Authenticode signed; a previously reported security-product threat detection remains undiagnosed.
 
 ## Deletion-first setup
 
@@ -77,3 +77,11 @@ The native adapter now passes loaded collection/group identities to the shared T
 Dedicated duplicate collections with this plugin's file/group IDs are saved and closed; in shared collections only the duplicate owned group is hidden. Steady-state startup cleanup neither opens absent collections nor forces hidden groups visible. User docking/layout remains owned by Rhino. Manual BKIDAutoCrop still shows a hidden toolbar on demand.
 
 The actual display policy and reentry gate are linked into TestToolbar. A fake host counts imports/show requests and simulates Open pumping another idle event. Tests cover auto-loaded identity reuse from a different path, repeated show, one fresh import, hidden/docked handling, scoped duplicate cleanup, no resurrection of closed UI, incomplete-import deferral and reentry. Native Windows Rhino UI behavior remains unexecuted here.
+
+## 2.5.0: configurable PNG output folder
+
+The resolution dialog displays the current output path and provides a folder-selection button; `BKIDAutoCropFolder` opens the same picker independently. Confirming an existing directory updates `PlugIn.Settings` key `CaptureOutputFolder`; cancellation leaves it unchanged. The picker is owned by the resolution dialog when opened there, or by Rhino's main window for the command. Changing a folder does not trigger capture. The folder preference applies immediately and survives normal Rhino restarts; settings remain scoped to the Rhino user profile.
+
+Both 1x and 2x/3x/4x captures now use the per-call runner. It transports the folder as base64-encoded UTF-8 data into `run(capture_scale=N, output_folder=...)`, avoiding quoting/escaping issues with Windows paths. Python `resolve_output_folder` prioritizes that explicit argument, then the standalone script setting, then Desktop/BKID_Captures. Capture failures do not fall back to a different directory. Filename generation, alpha/crop verification and same-directory temporary-file handling are unchanged. The installer cleans up the new x1 runner along with the other extracted scripts; it does not manage selected output folders or PNG files. The toolbar binding revision and RUI remain unchanged, so this feature does not require another toolbar refresh.
+
+API evidence: the official RhinoCommon 6.0.18016.23451 NuGet SDK's Eto.xml documents `SelectFolderDialog.Title`, `Directory`, `CommonDialog.ShowDialog(Window)`, and `Label.Wrap`; these calls compile against the bundled Eto 2.3 assembly. Attempts to fetch the corresponding upstream Eto source returned HTTP 404/403, so no upstream implementation code was reused. Existing native plugin settings and modal ownership patterns were reviewed in this repository. Tests execute the actual generated runners with all four scales, Korean/space/quote/Windows/UNC paths, selected-directory output, unchanged defaults and invalid inputs. Python checks folder precedence and default compatibility. The actual Windows picker, settings persistence in Rhino 6/8 and rendered PNG output remain unexecuted in this Linux environment.

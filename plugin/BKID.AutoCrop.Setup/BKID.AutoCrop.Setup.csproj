@@ -2,8 +2,8 @@
   <PropertyGroup>
     <TargetFramework>net45</TargetFramework>
     <OutputType>WinExe</OutputType>
-    <AssemblyName>BKID_AutoCrop_Setup_2.4.2</AssemblyName>
-    <Version>2.4.2</Version>
+    <AssemblyName>BKID_AutoCrop_Setup_2.5.0</AssemblyName>
+    <Version>2.5.0</Version>
     <AssemblyTitle>BKID AutoCrop Setup</AssemblyTitle>
     <Company>BKID</Company>
     <LangVersion>7.3</LangVersion>
@@ -18,7 +18,7 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Xml.Linq" />
-    <EmbeddedResource Include="../../installers/BKID_AutoCrop_2.4.2.rhi" LogicalName="BKID.Setup.Package.rhi" />
+    <EmbeddedResource Include="../../installers/BKID_AutoCrop_2.5.0.rhi" LogicalName="BKID.Setup.Package.rhi" />
     <EmbeddedResource Include="../../BKID_AutoCrop/assets/WizardImage.png" LogicalName="BKID.Setup.Logo.png" />
   </ItemGroup>
 </Project>

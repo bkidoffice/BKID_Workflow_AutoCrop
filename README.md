@@ -11,9 +11,15 @@ Windows Rhino의 실제 **BKID Workflowboost** 툴바에서 로고 버튼으로 
 
 배율은 캡처의 가로·세로 해상도에 적용합니다. 선택은 그 캡처에만 적용되어 다음 좌클릭은 1배입니다. 최종 크기는 자동 크롭에 따라 달라지며 투명 여백은 배율과 관계없이 사방 1px입니다.
 
-## 설치 / 다시 설치 — 2.4
+## PNG 저장 폴더 변경
 
-1. [설치 프로그램 다운로드 (.exe)](https://github.com/bkidoffice/BKID_Workflow_AutoCrop/raw/refs/heads/main/installers/BKID_AutoCrop_Setup_2.4.2.exe)
+툴바 버튼을 **우클릭 → 저장 폴더 변경…**으로 원하는 폴더를 선택하세요. 선택한 폴더는 사용자 설정에 저장하며 이후 좌클릭(1배)·우클릭(×2·×3·×4) 캡처에 모두 적용합니다. Rhino를 다시 켜도 유지됩니다.
+
+폴더만 변경하려면 배율을 선택하지 않고 창을 닫으면 됩니다. 폴더 선택창의 취소는 기존 경로를 유지합니다. 명령창에서 `BKIDAutoCropFolder`로 폴더만 바꿀 수도 있습니다. 변경 전 기본 위치는 바탕화면의 `BKID_Captures`이며, 변경 후 생성되는 PNG부터 새 폴더에 저장합니다.
+
+## 설치 / 다시 설치 — 2.5.0
+
+1. [설치 프로그램 다운로드 (.exe)](https://github.com/bkidoffice/BKID_Workflow_AutoCrop/raw/refs/heads/main/installers/BKID_AutoCrop_Setup_2.5.0.exe)
 2. Rhino를 모두 종료하고 실행 → **설치 / 다시 설치**
 3. 기존 설치가 있으면 **“설치되어 있습니다. 삭제하고 다시 설치할까요?”**에 예/아니요 선택
 4. 예를 선택했거나 처음 설치하는 경우, 이어지는 Rhino Installer에서 **현재 사용자 설치** 완료

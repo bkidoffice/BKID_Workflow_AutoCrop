@@ -16,6 +16,7 @@ namespace BKID.AutoCrop
         private const string BindingRevision = "single-toolbar-4";
         private const string BindingRevisionKey = "ToolbarBindingRevision";
         private const string ToolbarInitializedKey = "NativeToolbarInitialized";
+        private const string CaptureOutputFolderKey = "CaptureOutputFolder";
         private readonly StartupGate startupGate = new StartupGate();
         private bool waitingForStartup;
         private int startupAttempts;
@@ -130,11 +131,38 @@ namespace BKID.AutoCrop
             StopWaitingForStartup();
         }
 
+        internal string CaptureOutputFolder
+        {
+            get
+            {
+                string saved = Settings.GetString(CaptureOutputFolderKey, "");
+                return string.IsNullOrWhiteSpace(saved)
+                    ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "BKID_Captures")
+                    : saved;
+            }
+        }
+
+        internal bool ChooseCaptureOutputFolder(Eto.Forms.Window owner)
+        {
+            using (var dialog = new Eto.Forms.SelectFolderDialog { Title = "PNG 저장 폴더 선택" })
+            {
+                string current = CaptureOutputFolder;
+                dialog.Directory = Directory.Exists(current) ? current :
+                    Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                if (dialog.ShowDialog(owner) != Eto.Forms.DialogResult.Ok) return false;
+                string selected = Path.GetFullPath(dialog.Directory);
+                if (!Directory.Exists(selected)) throw new DirectoryNotFoundException("선택한 저장 폴더가 없습니다.");
+                Settings.SetString(CaptureOutputFolderKey, selected);
+                RhinoApp.WriteLine("PNG 저장 폴더: " + selected);
+                return true;
+            }
+        }
+
         internal string PrepareCaptureScript(int scale)
         {
             if (scale < 1 || scale > 4) throw new ArgumentOutOfRangeException("scale");
             var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                                      "BKID", "AutoCrop", "runtime", "2.4.2");
+                                      "BKID", "AutoCrop", "runtime", "2.5.0");
             Directory.CreateDirectory(folder);
             var target = Path.Combine(folder, "BKID_AutoCrop.py");
             using (var input = Assembly.GetExecutingAssembly().GetManifestResourceStream("BKID.AutoCrop.Capture.py"))
@@ -143,9 +171,8 @@ namespace BKID.AutoCrop
                 using (var output = new FileStream(target, FileMode.Create, FileAccess.Write, FileShare.Read))
                     input.CopyTo(output);
             }
-            if (scale == 1) return target;
             var runner = Path.Combine(folder, "BKID_AutoCrop_x" + scale + ".py");
-            File.WriteAllText(runner, CaptureRunner.Build(scale), new System.Text.UTF8Encoding(false));
+            File.WriteAllText(runner, CaptureRunner.Build(scale, CaptureOutputFolder), new System.Text.UTF8Encoding(false));
             return runner;
         }
 
@@ -194,6 +221,21 @@ namespace BKID.AutoCrop
         }
     }
 
+    [Guid("FA041EA0-386A-4F7D-B7B0-F473ED36C926")]
+    public sealed class AutoCropFolderCommand : Command
+    {
+        public override string EnglishName { get { return "BKIDAutoCropFolder"; } }
+        protected override Result RunCommand(RhinoDoc doc, RunMode mode)
+        {
+            try
+            {
+                return AutoCropPlugin.Instance.ChooseCaptureOutputFolder(RhinoEtoApp.MainWindow)
+                    ? Result.Success : Result.Cancel;
+            }
+            catch (Exception error) { RhinoApp.WriteLine("PNG 저장 폴더 변경: " + error); return Result.Failure; }
+        }
+    }
+
     [Guid("EB3D4348-12E2-49A3-B36C-940FE280DADB")]
     [CommandStyle(Style.ScriptRunner)]
     public sealed class AutoCropResolutionCommand : Command
@@ -210,7 +252,7 @@ namespace BKID.AutoCrop
             try
             {
                 int scale;
-                using (var dialog = new CaptureScaleDialog(view.ActiveViewport.Size.Width, view.ActiveViewport.Size.Height))
+                using (var dialog = new CaptureScaleDialog(view.ActiveViewport.Size.Width, view.ActiveViewport.Size.Height, AutoCropPlugin.Instance))
                     scale = dialog.ShowModal(RhinoEtoApp.MainWindow);
                 if (scale < 2 || scale > 4) return Result.Cancel;
                 return CaptureExecution.Run(doc, scale);

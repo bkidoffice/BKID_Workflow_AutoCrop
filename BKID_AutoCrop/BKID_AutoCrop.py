@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""BKID AutoCrop 1.2 - Windows Rhino 6 and 8, IronPython 2.7.
+"""BKID AutoCrop 1.3 - Windows Rhino 6 and 8, IronPython 2.7.
 Run with _RunPythonScript. No third-party Python packages required.
 """
 import math
@@ -22,7 +22,7 @@ def initialize_runtime():
     import Rhino
     if System.Environment.OSVersion.Platform != System.PlatformID.Win32NT:
         raise RuntimeError(u"이 버전은 Windows 전용입니다.")
-    Rhino.RhinoApp.WriteLine("BKID AutoCrop 1.2 | Rhino {0} | IronPython {1}".format(
+    Rhino.RhinoApp.WriteLine("BKID AutoCrop 1.3 | Rhino {0} | IronPython {1}".format(
         Rhino.RhinoApp.Version, sys.version.split()[0]))
 
 
@@ -147,7 +147,19 @@ def capture(doc, view, capture_scale=None):
         view.Redraw()
 
 
-def run(capture_scale=None):
+def resolve_output_folder(output_folder=None):
+    folder = OUTPUT_FOLDER if output_folder is None else output_folder
+    if folder is None:
+        import System
+        folder = os.path.join(
+            System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop),
+            "BKID_Captures")
+    if not folder or not folder.strip():
+        raise ValueError(u"PNG 저장 폴더를 선택해 주세요.")
+    return os.path.abspath(folder)
+
+
+def run(capture_scale=None, output_folder=None):
     scale = resolve_capture_scale(capture_scale)
     initialize_runtime()
     verify_bitmap_runtime()
@@ -164,9 +176,7 @@ def run(capture_scale=None):
         raise RuntimeError(u"활성 모델 뷰포트가 없습니다.")
     if isinstance(view, Rhino.Display.RhinoPageView):
         raise RuntimeError(u"Layout 대신 모델 뷰포트에서 실행해 주세요.")
-    folder = OUTPUT_FOLDER or os.path.join(
-        System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop),
-        "BKID_Captures")
+    folder = resolve_output_folder(output_folder)
     if not os.path.isdir(folder):
         os.makedirs(folder)
     name = "BKID_{0}_{1}.png".format(
