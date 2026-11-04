@@ -13,7 +13,7 @@ Windows Rhino의 실제 **BKID Workflowboost** 툴바에서 로고 버튼으로 
 
 ## 설치 / 다시 설치 — 2.4
 
-1. [설치 프로그램 다운로드 (.exe)](https://github.com/bkidoffice/BKID_Workflow_AutoCrop/raw/refs/heads/main/installers/BKID_AutoCrop_Setup_2.4.1.exe)
+1. [설치 프로그램 다운로드 (.exe)](https://github.com/bkidoffice/BKID_Workflow_AutoCrop/raw/refs/heads/main/installers/BKID_AutoCrop_Setup_2.4.3.exe)
 2. Rhino를 모두 종료하고 실행 → **설치 / 다시 설치**
 3. 기존 설치가 있으면 **“설치되어 있습니다. 삭제하고 다시 설치할까요?”**에 예/아니요 선택
 4. 예를 선택했거나 처음 설치하는 경우, 이어지는 Rhino Installer에서 **현재 사용자 설치** 완료
@@ -31,3 +31,6 @@ Windows Rhino의 실제 **BKID Workflowboost** 툴바에서 로고 버튼으로 
 2.4는 Rhino 6 초기 정식 SDK와 RUI 2.0을 기준으로 호환 경로를 보완했습니다. 마우스 설명은 **좌클릭 아이콘: 기본 해상도(1배)로 자동 크롭·PNG 저장**, **우클릭 아이콘: 해상도 선택 (×2·×3·×4)**으로 각각 표시하며, 기존에 저장된 버튼의 설명도 갱신합니다. Rhino 6에서 보고된 실행 실패의 정확한 원인은 F2 오류 기록 확인이 필요합니다.
 
 2.4.1은 Rhino Installer 종료 코드만으로 설치 실패를 표시하지 않습니다. 실제 새 플러그인과 툴바 명령이 확인되면 403 반환 후에도 완료로 처리합니다. 마우스 아이콘별 설명을 분리하고 오래된 설명 캐시를 갱신합니다.
+
+
+2.4.3: 2.4.1 기반으로 캡처 중 작업평면 Z축 표시를 숨겨 가장자리 판정에서 제외합니다. 성공·실패 후 원래 축 표시 상태를 복구합니다. 실제 Windows Rhino 실행은 미검증입니다.

@@ -122,7 +122,13 @@ def capture(doc, view, capture_scale=None):
     selected = list(doc.Objects.GetSelectedObjects(False, False))
     states = [(obj, obj.IsSelected(False), list(obj.GetSelectedSubObjects() or []))
               for obj in selected]
+    viewport = view.ActiveViewport
+    construction_plane = viewport.GetConstructionPlane()
+    show_z_axis = construction_plane.ShowZAxis
     try:
+        # Rhino manages the construction-plane Z axis separately from DrawGridAxes.
+        construction_plane.ShowZAxis = False
+        viewport.SetConstructionPlane(construction_plane)
         for obj, state, components in states:
             for component in components:
                 obj.SelectSubObject(component, False, True)
@@ -139,6 +145,8 @@ def capture(doc, view, capture_scale=None):
         settings.TransparentBackground = True
         return settings.CaptureToBitmap(view)
     finally:
+        construction_plane.ShowZAxis = show_z_axis
+        viewport.SetConstructionPlane(construction_plane)
         for obj, state, components in states:
             if state:
                 obj.Select(True)

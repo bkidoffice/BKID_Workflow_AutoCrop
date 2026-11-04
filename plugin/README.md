@@ -1,4 +1,4 @@
-# Native toolbar and deletion-first installer — 2.4.1
+# Native toolbar and deletion-first installer — 2.4.3
 
 ## Build
 
@@ -10,7 +10,7 @@ python3 tools/build_rhi.py
 
 An SDK outside PATH can be passed with `--dotnet /path/to/dotnet`. Locked dependencies compile a RhinoCommon 6.0.18016.23451 / .NET Framework 4.5 RHP and an x64 Windows setup EXE. The builder verifies metadata, embedded capture/logo/image bytes, RHI contents and shared managed-file deletion tests. `python3 -m unittest discover -s tests -v` additionally runs legacy installer and native RUI checks (Pillow required).
 
-Outputs: `installers/BKID_AutoCrop_Setup_2.4.1.exe` and `installers/BKID_AutoCrop_2.4.1.rhi`. Host SDK DLLs are not distributed. The EXE is not Authenticode signed; a previously reported security-product threat detection remains undiagnosed.
+Outputs: `installers/BKID_AutoCrop_Setup_2.4.3.exe` and `installers/BKID_AutoCrop_2.4.3.rhi`. Host SDK DLLs are not distributed. The EXE is not Authenticode signed; a previously reported security-product threat detection remains undiagnosed.
 
 ## Deletion-first setup
 
@@ -67,3 +67,6 @@ Binary metadata comparison confirmed that 2.3.1 referenced RhinoCommon/Rhino.UI 
 The former wrapper threw immediately on nonzero Rhino Installer exits, before checking output files. It now verifies output after every exit, including 403. Registered plugin paths are checked first, then the standard user plugin tree, with bounded retries for delayed copies. Tests use the actual verification class to cover 403 with valid output, zero with missing/old output, delayed valid output, and changed RUI layout/schema. This fixes false error reporting without calling an unverified installation successful. Windows Installer execution remains untested here.
 
 Left/right hover descriptions now contain only their respective action, not the same combined sentence. New description macro IDs (`capture-hover-v2`, `resolution-hover-v2`) avoid retaining older cached macro text. The migration recognizes the prior capture ID and command-based copied buttons, rebinds those buttons to the new description macros and preserves their capture actions, toolbar/button/group IDs, docking and unrelated buttons. Unused legacy macro definitions are left intact for other references. The binding revision is `distinct-hover-3`. This intentionally replaces description-macro identities; older notes about retaining those identities describe previous releases.
+
+
+2.4.3: 2.4.1 기반으로 캡처 중 작업평면 Z축 표시를 숨겨 가장자리 판정에서 제외합니다. 성공·실패 후 원래 축 표시 상태를 복구합니다. 실제 Windows Rhino 실행은 미검증입니다.

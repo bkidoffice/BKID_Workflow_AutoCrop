@@ -4,6 +4,9 @@ internal static class CaptureApi
 {
  internal static void Check(RhinoDoc doc, RhinoView view)
  {
+  var plane = view.ActiveViewport.GetConstructionPlane();
+  plane.ShowZAxis = false;
+  view.ActiveViewport.SetConstructionPlane(plane);
   var capture = new ViewCapture();
   capture.TransparentBackground = true;
   capture.ScaleScreenItems = false;

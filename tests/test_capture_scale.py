@@ -35,13 +35,15 @@ class CaptureScaleTests(unittest.TestCase):
                               Select=lambda value: setattr(selected, 'value', value))
         doc = SimpleNamespace(Objects=SimpleNamespace(GetSelectedObjects=lambda *unused: [obj]))
         redraws = []
-        view = SimpleNamespace(ActiveViewport=SimpleNamespace(Size=SimpleNamespace(Width=160, Height=90)),
+        plane = SimpleNamespace(ShowZAxis=True)
+        view = SimpleNamespace(ActiveViewport=SimpleNamespace(Size=SimpleNamespace(Width=160, Height=90), GetConstructionPlane=lambda: plane, SetConstructionPlane=lambda value: None),
                                Redraw=lambda: redraws.append(True))
         records = []
         class ViewCapture:
             def CaptureToBitmap(settings, actual_view):
                 self.assertIs(actual_view, view)
                 self.assertFalse(selected.value)
+                self.assertFalse(plane.ShowZAxis)
                 records.append(settings)
                 if fail: raise RuntimeError('capture failed')
                 return 'bitmap'
@@ -53,6 +55,7 @@ class CaptureScaleTests(unittest.TestCase):
             for factor in (2, 3, 4, None):
                 self.assertEqual(self.capture.capture(doc, view, factor), 'bitmap')
                 self.assertTrue(selected.value)
+                self.assertTrue(view.ActiveViewport.GetConstructionPlane().ShowZAxis)
         self.assertEqual([(item.Width, item.Height) for item in records],
                          [(320, 180), (480, 270), (640, 360), (160, 90)])
         self.assertTrue(all(item.TransparentBackground for item in records))
@@ -64,4 +67,5 @@ class CaptureScaleTests(unittest.TestCase):
         with patch.dict(sys.modules, {'Rhino': rhino}), self.assertRaisesRegex(RuntimeError, 'capture failed'):
             self.capture.capture(doc, view, 4)
         self.assertTrue(selected.value)
+        self.assertTrue(view.ActiveViewport.GetConstructionPlane().ShowZAxis)
         self.assertEqual(len(redraws), 2)
