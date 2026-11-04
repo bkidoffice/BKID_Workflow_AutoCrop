@@ -13,7 +13,7 @@ namespace BKID.AutoCrop
     [Guid("3881C10B-30A8-4FE5-BB48-9E53A6FEA1F4")]
     public sealed class AutoCropPlugin : PlugIn
     {
-        private const string BindingRevision = "rhino6-tooltips-2";
+        private const string BindingRevision = "distinct-hover-3";
         private const string BindingRevisionKey = "ToolbarBindingRevision";
         private const string ToolbarInitializedKey = "NativeToolbarInitialized";
         private bool waitingForStartup;
@@ -127,7 +127,7 @@ namespace BKID.AutoCrop
         {
             if (scale < 1 || scale > 4) throw new ArgumentOutOfRangeException("scale");
             var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                                      "BKID", "AutoCrop", "runtime", "2.4.0");
+                                      "BKID", "AutoCrop", "runtime", "2.4.1");
             Directory.CreateDirectory(folder);
             var target = Path.Combine(folder, "BKID_AutoCrop.py");
             using (var input = Assembly.GetExecutingAssembly().GetManifestResourceStream("BKID.AutoCrop.Capture.py"))

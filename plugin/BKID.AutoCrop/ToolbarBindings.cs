@@ -8,6 +8,8 @@ namespace BKID.AutoCrop
 {
     internal static class ToolbarBindings
     {
+        private const string PreviousCaptureId = "654e9b41-09dc-51b6-8de2-4ee942d03864";
+
         private static XDocument Read(string text)
         {
             using (var input = new StringReader(text))
@@ -30,6 +32,7 @@ namespace BKID.AutoCrop
             var document = Read(current);
             var source = Read(template);
             var ids = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            ids.Add(PreviousCaptureId);
             ids.Add((string)source.Root.Element("macros").Elements("macro_item")
                 .Single(m => IsCommand(m, "BKIDAutoCropCapture")).Attribute("guid"));
             var macros = document.Root.Element("macros");
@@ -69,34 +72,47 @@ namespace BKID.AutoCrop
             foreach (var item in macros.Elements("macro_item").Where(m => m.Attribute("guid") != null))
                 lookup[(string)item.Attribute("guid")] = item;
             bool changed = false;
-            bool needsRightMacro = false;
+            bool found = false;
+            string newLeftId = (string)left.Attribute("guid");
+            string newRightId = (string)right.Attribute("guid");
             foreach (var button in document.Descendants("tool_bar_item"))
             {
                 string leftId = (string)button.Element("left_macro_id");
                 if (leftId == null) continue;
                 XElement localLeft;
                 lookup.TryGetValue(leftId, out localLeft);
-                if (!string.Equals(leftId, (string)left.Attribute("guid"), StringComparison.OrdinalIgnoreCase) &&
+                if (!string.Equals(leftId, newLeftId, StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(leftId, PreviousCaptureId, StringComparison.OrdinalIgnoreCase) &&
                     (localLeft == null || !IsCommand(localLeft, "BKIDAutoCropCapture"))) continue;
-                if (localLeft == null)
+                found = true;
+                // Fresh macro IDs avoid reusing Rhino's cached, shared hover descriptions.
+                if (!string.Equals(leftId, newLeftId, StringComparison.OrdinalIgnoreCase))
                 {
-                    localLeft = new XElement(left);
-                    localLeft.SetAttributeValue("guid", leftId);
-                    macros.Add(localLeft);
-                    lookup[leftId] = localLeft;
+                    button.SetElementValue("left_macro_id", newLeftId);
                     changed = true;
                 }
-                changed = UpdateDescriptions(localLeft, left) || changed;
-                string rightId = (string)button.Element("right_macro_id");
-                XElement localRight;
-                if (rightId != null && lookup.TryGetValue(rightId, out localRight) && IsCommand(localRight, "BKIDAutoCropResolution"))
+                if (!string.Equals((string)button.Element("right_macro_id"), newRightId, StringComparison.OrdinalIgnoreCase))
                 {
-                    changed = UpdateDescriptions(localRight, right) || changed;
-                    continue;
+                    button.SetElementValue("right_macro_id", newRightId);
+                    changed = true;
                 }
-                button.SetElementValue("right_macro_id", (string)right.Attribute("guid"));
-                changed = true;
-                needsRightMacro = true;
+            }
+            if (!found) return null;
+            foreach (var expected in new[] { left, right })
+            {
+                XElement actual;
+                string id = (string)expected.Attribute("guid");
+                if (!lookup.TryGetValue(id, out actual))
+                {
+                    macros.Add(new XElement(expected));
+                    changed = true;
+                }
+                else if (!string.Equals((string)actual.Element("script"), (string)expected.Element("script"), StringComparison.OrdinalIgnoreCase))
+                {
+                    actual.ReplaceWith(new XElement(expected));
+                    changed = true;
+                }
+                else changed = UpdateDescriptions(actual, expected) || changed;
             }
             if (!changed) return null;
             if (macros.Parent == null)
@@ -104,12 +120,6 @@ namespace BKID.AutoCrop
                 var following = document.Root.Element("bitmaps") ?? document.Root.Element("scripts");
                 if (following != null) following.AddBeforeSelf(macros);
                 else document.Root.Add(macros);
-            }
-            if (needsRightMacro)
-            {
-                XElement previous;
-                if (lookup.TryGetValue((string)right.Attribute("guid"), out previous)) previous.ReplaceWith(new XElement(right));
-                else macros.Add(new XElement(right));
             }
             return document.ToString(SaveOptions.DisableFormatting);
         }

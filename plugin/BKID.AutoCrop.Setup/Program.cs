@@ -6,7 +6,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Win32;
@@ -42,7 +41,7 @@ namespace BKID.AutoCrop.Setup
         private bool busy;
         public SetupWindow()
         {
-            Text = "BKID Workflowboost 2.4.0 설치";
+            Text = "BKID Workflowboost 2.4.1 설치";
             ClientSize = new Size(760, 420);
             Padding = new Padding(0);
             FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -166,7 +165,7 @@ namespace BKID.AutoCrop.Setup
 
         private void Install(string temporary, bool replacementAllowed)
         {
-            string package = Path.Combine(temporary, "BKID_AutoCrop_2.4.0.rhi");
+            string package = Path.Combine(temporary, "BKID_AutoCrop_2.4.1.rhi");
             using (var input = Assembly.GetExecutingAssembly().GetManifestResourceStream("BKID.Setup.Package.rhi"))
             using (var output = File.Create(package)) input.CopyTo(output);
             byte[] expectedPlugin;
@@ -177,6 +176,7 @@ namespace BKID.AutoCrop.Setup
                 expectedPlugin = Read(zip.GetEntry("BKID.AutoCrop.rhp"));
                 expectedToolbar = Read(zip.GetEntry("BKID.AutoCrop.rui"));
             }
+            var verification = new InstallationVerification(expectedPlugin, expectedToolbar);
             // Discover and validate all candidates before removing any installation.
             var oldPlugins = FindInstalledPlugins().ToList();
             foreach (var version in new[] { "6.0", "8.0" })
@@ -204,7 +204,7 @@ namespace BKID.AutoCrop.Setup
             foreach (var version in new[] { "6", "8" })
             foreach (var name in new[] { "BKID_AutoCrop.py", "Show_AutoCrop.py", "BKID_AutoCrop.rui", "assets/BKID_AutoCrop_Icon.svg", "assets/icon_32.png" })
                 files.Add(Path.Combine(roaming, "BKID", "AutoCrop", "Rhino" + version, name.Replace('/', Path.DirectorySeparatorChar)));
-            foreach (var version in new[] { "2.0.0", "2.1.0", "2.2.0", "2.3.0", "2.3.1", "2.4.0" })
+            foreach (var version in new[] { "2.0.0", "2.1.0", "2.2.0", "2.3.0", "2.3.1", "2.4.0", "2.4.1" })
             foreach (var name in new[] { "BKID_AutoCrop.py", "BKID_AutoCrop_x2.py", "BKID_AutoCrop_x3.py", "BKID_AutoCrop_x4.py" })
                 files.Add(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BKID", "AutoCrop", "runtime", version, name));
             managed.Validate(files);
@@ -215,25 +215,39 @@ namespace BKID.AutoCrop.Setup
                 foreach (var file in files) managed.Remove(file);
                 foreach (var key in registry) Registry.CurrentUser.DeleteSubKeyTree(key, false);
                 var start = new ProcessStartInfo(package) { UseShellExecute = true };
+                int? installerExitCode = null;
                 using (var installer = Process.Start(start))
                 {
-                    if (installer != null) installer.WaitForExit();
-                    if (installer != null && installer.ExitCode != 0) throw new InvalidOperationException("Rhino Installer가 설치를 완료하지 않았습니다 (" + installer.ExitCode + ").");
+                    if (installer != null)
+                    {
+                        installer.WaitForExit();
+                        installerExitCode = installer.ExitCode;
+                    }
                 }
-                // Do not treat a zero installer exit code or an old file as success.
-                bool complete = false;
-                for (int attempt = 0; attempt < 80 && !complete; attempt++)
-                {
-                    complete = FindInstalledPlugins().Any(file => Equal(File.ReadAllBytes(file), expectedPlugin) &&
-                        File.Exists(Path.ChangeExtension(file, ".rui")) && Equal(File.ReadAllBytes(Path.ChangeExtension(file, ".rui")), expectedToolbar));
-                    if (!complete) System.Threading.Thread.Sleep(250);
-                }
-                if (!complete) throw new InvalidOperationException("새 플러그인과 툴바 설치를 확인하지 못했습니다. 설치 취소 또는 다른 설치 범위인지 확인하세요.");
+                // The installed new payload is authoritative, including nonzero engine exits.
+                InstallationVerification.WaitForComplete(installerExitCode,
+                    () => FindRegisteredPlugins().Any(verification.Matches) || FindInstalledPlugins().Any(verification.Matches),
+                    () => System.Threading.Thread.Sleep(250));
                 return;
             }
             catch (Exception original)
             {
                 throw new InvalidOperationException(original.Message + "\r\n이전 버전은 백업하거나 자동 복원하지 않습니다. 새 버전 설치를 다시 진행해 주세요.", original);
+            }
+        }
+
+        private IEnumerable<string> FindRegisteredPlugins()
+        {
+            foreach (var version in new[] { "6.0", "8.0" })
+            foreach (var id in new[] { PluginId, "{" + PluginId + "}" })
+            foreach (var hive in new[] { Registry.CurrentUser, Registry.LocalMachine })
+            {
+                string path = @"Software\McNeel\Rhinoceros\" + version + @"\Plug-ins\" + id;
+                using (var key = hive.OpenSubKey(path))
+                {
+                    var file = key == null ? null : key.GetValue("FileName") as string;
+                    if (!string.IsNullOrWhiteSpace(file)) yield return file.Trim().Trim('"');
+                }
             }
         }
 
@@ -271,10 +285,6 @@ namespace BKID.AutoCrop.Setup
             if (entry == null) throw new InvalidDataException("설치 패키지 파일이 누락되었습니다.");
             using (var stream = entry.Open())
             using (var memory = new MemoryStream()) { stream.CopyTo(memory); return memory.ToArray(); }
-        }
-        private static bool Equal(byte[] left, byte[] right)
-        {
-            using (var hash = SHA256.Create()) return hash.ComputeHash(left).SequenceEqual(hash.ComputeHash(right));
         }
     }
 }

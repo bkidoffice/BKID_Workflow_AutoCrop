@@ -40,12 +40,12 @@ def build():
     label(bar, 'text', 'BKID Workflowboost')
     button = E.SubElement(bar, 'tool_bar_item', guid=guid('button'))
     label(button, 'text', 'AutoCrop')
-    E.SubElement(button, 'left_macro_id').text = guid('capture')
-    E.SubElement(button, 'right_macro_id').text = guid('resolution')
+    E.SubElement(button, 'left_macro_id').text = guid('capture-hover-v2')
+    E.SubElement(button, 'right_macro_id').text = guid('resolution-hover-v2')
     macros = E.SubElement(r, 'macros')
     for key, command, caption, tooltip in [
-            ('capture', 'BKIDAutoCropCapture', 'AutoCrop', '좌클릭: 기본 해상도(1배)로 자동 크롭·PNG 저장'),
-            ('resolution', 'BKIDAutoCropResolution', 'AutoCrop 해상도 선택', '우클릭: 캡처 해상도 선택 (×2·×3·×4)')]:
+            ('capture-hover-v2', 'BKIDAutoCropCapture', 'AutoCrop', '기본 해상도(1배)로 자동 크롭·PNG 저장'),
+            ('resolution-hover-v2', 'BKIDAutoCropResolution', 'AutoCrop 해상도 선택', '해상도 선택 (×2·×3·×4)')]:
         macro = E.SubElement(macros, 'macro_item', guid=guid(key), bitmap_id=guid('icon'))
         for tag, value in [('text', caption),
                            ('tooltip', tooltip),

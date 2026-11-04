@@ -29,10 +29,10 @@ class NativeToolbarTests(unittest.TestCase):
         self.assertEqual(macro.findtext('script'), '! _BKIDAutoCropCapture')
         self.assertEqual(right.findtext('script'), '! _BKIDAutoCropResolution')
         self.assertNotEqual(macro.get('guid'), right.get('guid'))
-        self.assertIn('좌클릭', macro.findtext('tooltip/locale_1033'))
         self.assertIn('1배', macro.findtext('tooltip/locale_1033'))
-        self.assertIn('우클릭', right.findtext('tooltip/locale_1033'))
         self.assertIn('×2', right.findtext('tooltip/locale_1033'))
+        self.assertNotIn('×2', macro.findtext('tooltip/locale_1033'))
+        self.assertNotIn('1배', right.findtext('tooltip/locale_1033'))
         self.assertNotEqual(macro.findtext('tooltip/locale_1033'), right.findtext('tooltip/locale_1033'))
         self.assertEqual(right.get('bitmap_id'), macro.get('bitmap_id'))
         # Native RUI stores bitmap_id as an attribute, not a child element.
@@ -45,7 +45,7 @@ class NativeToolbarTests(unittest.TestCase):
                 self.assertEqual(png.getpixel((0, 0))[3], 0)
 
     def test_rhi_contains_matching_named_plugin_and_toolbar(self):
-        with zipfile.ZipFile(ROOT / 'installers/BKID_AutoCrop_2.4.0.rhi') as archive:
+        with zipfile.ZipFile(ROOT / 'installers/BKID_AutoCrop_2.4.1.rhi') as archive:
             self.assertIsNone(archive.testzip())
             self.assertEqual(set(archive.namelist()), {'BKID.AutoCrop.rhp', 'BKID.AutoCrop.rui'})
             self.assertTrue(archive.read('BKID.AutoCrop.rhp').startswith(b'MZ'))

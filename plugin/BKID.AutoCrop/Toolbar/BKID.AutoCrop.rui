@@ -31,21 +31,21 @@
         <text>
           <locale_1033>AutoCrop</locale_1033>
         </text>
-        <left_macro_id>654e9b41-09dc-51b6-8de2-4ee942d03864</left_macro_id>
-        <right_macro_id>53aacf32-164e-5460-805d-39f1df08e28d</right_macro_id>
+        <left_macro_id>117e9aba-9a69-59c4-97a0-f4ac4f4fe9f1</left_macro_id>
+        <right_macro_id>61d94cd5-f536-5bc7-858d-b7c8051d8edf</right_macro_id>
       </tool_bar_item>
     </tool_bar>
   </tool_bars>
   <macros>
-    <macro_item guid="654e9b41-09dc-51b6-8de2-4ee942d03864" bitmap_id="f5f6e247-44da-5c99-9882-ac2ad81b7a37">
+    <macro_item guid="117e9aba-9a69-59c4-97a0-f4ac4f4fe9f1" bitmap_id="f5f6e247-44da-5c99-9882-ac2ad81b7a37">
       <text>
         <locale_1033>AutoCrop</locale_1033>
       </text>
       <tooltip>
-        <locale_1033>좌클릭: 기본 해상도(1배)로 자동 크롭·PNG 저장</locale_1033>
+        <locale_1033>기본 해상도(1배)로 자동 크롭·PNG 저장</locale_1033>
       </tooltip>
       <help_text>
-        <locale_1033>좌클릭: 기본 해상도(1배)로 자동 크롭·PNG 저장</locale_1033>
+        <locale_1033>기본 해상도(1배)로 자동 크롭·PNG 저장</locale_1033>
       </help_text>
       <button_text>
         <locale_1033>AutoCrop</locale_1033>
@@ -55,15 +55,15 @@
       </menu_text>
       <script>! _BKIDAutoCropCapture</script>
     </macro_item>
-    <macro_item guid="53aacf32-164e-5460-805d-39f1df08e28d" bitmap_id="f5f6e247-44da-5c99-9882-ac2ad81b7a37">
+    <macro_item guid="61d94cd5-f536-5bc7-858d-b7c8051d8edf" bitmap_id="f5f6e247-44da-5c99-9882-ac2ad81b7a37">
       <text>
         <locale_1033>AutoCrop 해상도 선택</locale_1033>
       </text>
       <tooltip>
-        <locale_1033>우클릭: 캡처 해상도 선택 (×2·×3·×4)</locale_1033>
+        <locale_1033>해상도 선택 (×2·×3·×4)</locale_1033>
       </tooltip>
       <help_text>
-        <locale_1033>우클릭: 캡처 해상도 선택 (×2·×3·×4)</locale_1033>
+        <locale_1033>해상도 선택 (×2·×3·×4)</locale_1033>
       </help_text>
       <button_text>
         <locale_1033>AutoCrop 해상도 선택</locale_1033>

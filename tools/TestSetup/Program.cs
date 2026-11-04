@@ -67,5 +67,49 @@ try
     Assert(rejectedRace, "A newly detected installation must not be deleted without confirmation.");
     Console.WriteLine("PASS: actual wizard workflow preserves existing files on No, replaces on Yes, skips prompt for fresh installs and rejects unapproved new installations.");
 
+    var verifiedFolder = Path.Combine(root, "verified");
+    Directory.CreateDirectory(verifiedFolder);
+    var plugin = Path.Combine(verifiedFolder, "BKID.AutoCrop.rhp");
+    var rui = Path.ChangeExtension(plugin, ".rui");
+    byte[] payload = new byte[] { 0x4d, 0x5a, 7, 9 };
+    string toolbar = "<RhinoUI major_ver='2' guid='own-collection'><tool_bar_groups><tool_bar_group><dock_bar_info floating='True'/></tool_bar_group></tool_bar_groups><macros><macro_item guid='left'><script>! _BKIDAutoCropCapture</script></macro_item><macro_item guid='right'><script>! _BKIDAutoCropResolution</script></macro_item></macros></RhinoUI>";
+    var verification = new InstallationVerification(payload, System.Text.Encoding.UTF8.GetBytes(toolbar));
+    File.WriteAllBytes(plugin, payload);
+    File.WriteAllText(rui, toolbar);
+    int waits = 0;
+    InstallationVerification.WaitForComplete(403, () => verification.Matches(plugin), () => waits++, 2);
+    Assert(waits == 0, "Verified 403 should complete immediately without an error.");
+    InstallationVerification.WaitForComplete(0, () => verification.Matches(plugin), () => waits++, 2);
+    Console.WriteLine("PASS: verified installation succeeds with both 403 and zero exit codes.");
+
+    var edited = System.Xml.Linq.XDocument.Parse(toolbar);
+    edited.Root!.SetAttributeValue("major_ver", "3");
+    edited.Descendants("dock_bar_info").First().SetAttributeValue("floating", "False");
+    edited.Descendants("dock_bar_info").First().SetAttributeValue("float_point", "200,300");
+    edited.Save(rui);
+    Assert(verification.Matches(plugin), "Rhino-saved schema/layout changes should not cause failure.");
+    Console.WriteLine("PASS: rewritten toolbar formatting, docking and schema remain valid.");
+
+    File.WriteAllBytes(plugin, new byte[] { 0x4d, 0x5a, 1 });
+    Assert(!verification.Matches(plugin), "Old/different plugin must not count as the new installation.");
+    bool failed = false;
+    try { InstallationVerification.WaitForComplete(0, () => verification.Matches(plugin), () => { }, 1); }
+    catch (InvalidOperationException) { failed = true; }
+    Assert(failed, "Exit zero alone must not hide a missing new plugin.");
+    File.Delete(plugin);
+    failed = false;
+    try { InstallationVerification.WaitForComplete(403, () => verification.Matches(plugin), () => { }, 1); }
+    catch (InvalidOperationException error) { failed = error.Message.Contains("403"); }
+    Assert(failed, "Unverified 403 must remain a failure with the diagnostic code.");
+
+    InstallationVerification.WaitForComplete(403, () => verification.Matches(plugin), () => File.WriteAllBytes(plugin, payload), 2);
+    File.Delete(rui);
+    Assert(!verification.Matches(plugin), "Missing toolbar must fail verification.");
+    var missingCommand = System.Xml.Linq.XDocument.Parse(toolbar);
+    missingCommand.Descendants("macro_item").Last().Remove();
+    missingCommand.Save(rui);
+    Assert(!verification.Matches(plugin), "Missing resolution command must fail verification.");
+    Console.WriteLine("PASS: old/missing files and missing commands remain failures; delayed valid files after 403 succeed.");
+
 }
 finally { Directory.Delete(root, true); }
