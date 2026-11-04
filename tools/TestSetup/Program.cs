@@ -113,3 +113,24 @@ try
 
 }
 finally { Directory.Delete(root, true); }
+
+var engineTestRoot = Path.Combine(Path.GetTempPath(), "BKID engine 한글 " + Guid.NewGuid());
+try
+{
+    Directory.CreateDirectory(engineTestRoot);
+    File.WriteAllText(Path.Combine(engineTestRoot, "7z.exe"), "unrelated");
+    bool missing = false;
+    try { RhinoInstaller.Find(new[] { engineTestRoot }); }
+    catch (FileNotFoundException) { missing = true; }
+    if (!missing) throw new Exception("Missing Rhino engine must fail before installation.");
+    string engine = Path.Combine(engineTestRoot, "McNeel", "Rhino Installer Engine", "x64", "rhiexec.exe");
+    Directory.CreateDirectory(Path.GetDirectoryName(engine)!);
+    File.WriteAllText(engine, "fixture");
+    if (RhinoInstaller.Find(new[] { engineTestRoot }) != engine) throw new Exception("Rhino engine not resolved.");
+    string package = Path.Combine(engineTestRoot, "한글 package.rhi");
+    var start = RhinoInstaller.StartInfo(engine, package);
+    if (start.FileName != engine || start.UseShellExecute || start.Arguments != "\"" + package + "\"")
+        throw new Exception("RHI must be passed as a quoted argument directly to Rhino engine.");
+    Console.WriteLine("PASS: explicit Rhino installer resolution, missing-engine guard and direct launch independent of .rhi associations.");
+}
+finally { Directory.Delete(engineTestRoot, true); }
