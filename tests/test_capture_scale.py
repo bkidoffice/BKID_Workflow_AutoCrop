@@ -1,7 +1,6 @@
 import importlib.util
 from pathlib import Path
 import sys
-import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -28,31 +27,6 @@ class CaptureScaleTests(unittest.TestCase):
         for factor in (0, -1, float('nan'), float('inf'), -float('inf')):
             with self.subTest(factor=factor), self.assertRaises(ValueError):
                 self.capture.capture_dimensions(160, 90, factor)
-
-    def test_output_folder_override_is_per_call_and_preserves_defaults(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            desktop = Path(temporary) / '바탕 화면'
-            configured = Path(temporary) / "프로젝트 'A' 결과"
-            environment = SimpleNamespace(
-                SpecialFolder=SimpleNamespace(Desktop='Desktop'),
-                GetFolderPath=lambda _: str(desktop))
-            with patch.dict(sys.modules, {'System': SimpleNamespace(Environment=environment)}):
-                self.assertEqual(self.capture.resolve_output_folder(), str(desktop / 'BKID_Captures'))
-                self.assertEqual(self.capture.resolve_output_folder(str(configured)), str(configured))
-                self.assertEqual(self.capture.resolve_output_folder(), str(desktop / 'BKID_Captures'))
-            self.assertIsNone(self.capture.OUTPUT_FOLDER)
-            self.assertFalse(configured.exists(), 'Resolving a folder must not create it.')
-
-    def test_explicit_output_folder_takes_priority_over_standalone_setting(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            configured = str(Path(temporary) / '설정')
-            once = str(Path(temporary) / '선택')
-            self.capture.OUTPUT_FOLDER = configured
-            self.assertEqual(self.capture.resolve_output_folder(once), once)
-            self.assertEqual(self.capture.resolve_output_folder(), configured)
-            for invalid in ('', '   '):
-                with self.assertRaises(ValueError):
-                    self.capture.resolve_output_folder(invalid)
 
     def host(self, fail=False):
         selected = SimpleNamespace(value=True)

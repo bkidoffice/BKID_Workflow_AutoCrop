@@ -1,4 +1,4 @@
-# Native toolbar and deletion-first installer — 2.5.0
+# Native toolbar and deletion-first installer — 2.4.1
 
 ## Build
 
@@ -10,7 +10,7 @@ python3 tools/build_rhi.py
 
 An SDK outside PATH can be passed with `--dotnet /path/to/dotnet`. Locked dependencies compile a RhinoCommon 6.0.18016.23451 / .NET Framework 4.5 RHP and an x64 Windows setup EXE. The builder verifies metadata, embedded capture/logo/image bytes, RHI contents and shared managed-file deletion tests. `python3 -m unittest discover -s tests -v` additionally runs legacy installer and native RUI checks (Pillow required).
 
-Outputs: `installers/BKID_AutoCrop_Setup_2.5.0.exe` and `installers/BKID_AutoCrop_2.5.0.rhi`. Host SDK DLLs are not distributed. The EXE is not Authenticode signed; a previously reported security-product threat detection remains undiagnosed.
+Outputs: `installers/BKID_AutoCrop_Setup_2.4.1.exe` and `installers/BKID_AutoCrop_2.4.1.rhi`. Host SDK DLLs are not distributed. The EXE is not Authenticode signed; a previously reported security-product threat detection remains undiagnosed.
 
 ## Deletion-first setup
 
@@ -66,22 +66,4 @@ Binary metadata comparison confirmed that 2.3.1 referenced RhinoCommon/Rhino.UI 
 
 The former wrapper threw immediately on nonzero Rhino Installer exits, before checking output files. It now verifies output after every exit, including 403. Registered plugin paths are checked first, then the standard user plugin tree, with bounded retries for delayed copies. Tests use the actual verification class to cover 403 with valid output, zero with missing/old output, delayed valid output, and changed RUI layout/schema. This fixes false error reporting without calling an unverified installation successful. Windows Installer execution remains untested here.
 
-Left/right hover descriptions now contain only their respective action, not the same combined sentence. New description macro IDs (`capture-hover-v2`, `resolution-hover-v2`) avoid retaining older cached macro text. The migration recognizes the prior capture ID and command-based copied buttons, rebinds those buttons to the new description macros and preserves their capture actions, toolbar/button/group IDs, docking and unrelated buttons. Unused legacy macro definitions are left intact for other references. That release used binding revision `distinct-hover-3`. This intentionally replaces description-macro identities; older notes about retaining those identities describe previous releases.
-
-## 2.4.2: one first-run toolbar
-
-The previous implementation could open the installed-path RUI even after Rhino had auto-loaded a user UI copy under a different path. It also called Visible=true on already-visible groups, including after RUI refresh. A UI operation can pump nested Idle callbacks before the initialized flag is saved.
-
-The native adapter now passes loaded collection/group identities to the shared ToolbarDisplay policy. It reuses a matching loaded group by ID, prefers docking, opens only if no matching collection exists, defers an unfinished import instead of opening again, and sets visibility only when necessary. The idle callback uses StartupGate to block reentry. A fresh, already-correct RUI skips the refresh close/open cycle; existing installations still get one binding-revision refresh, whose visibility restoration also skips no-op setters.
-
-Dedicated duplicate collections with this plugin's file/group IDs are saved and closed; in shared collections only the duplicate owned group is hidden. Steady-state startup cleanup neither opens absent collections nor forces hidden groups visible. User docking/layout remains owned by Rhino. Manual BKIDAutoCrop still shows a hidden toolbar on demand.
-
-The actual display policy and reentry gate are linked into TestToolbar. A fake host counts imports/show requests and simulates Open pumping another idle event. Tests cover auto-loaded identity reuse from a different path, repeated show, one fresh import, hidden/docked handling, scoped duplicate cleanup, no resurrection of closed UI, incomplete-import deferral and reentry. Native Windows Rhino UI behavior remains unexecuted here.
-
-## 2.5.0: configurable PNG output folder
-
-The resolution dialog displays the current output path and provides a folder-selection button; `BKIDAutoCropFolder` opens the same picker independently. Confirming an existing directory updates `PlugIn.Settings` key `CaptureOutputFolder`; cancellation leaves it unchanged. The picker is owned by the resolution dialog when opened there, or by Rhino's main window for the command. Changing a folder does not trigger capture. The folder preference applies immediately and survives normal Rhino restarts; settings remain scoped to the Rhino user profile.
-
-Both 1x and 2x/3x/4x captures now use the per-call runner. It transports the folder as base64-encoded UTF-8 data into `run(capture_scale=N, output_folder=...)`, avoiding quoting/escaping issues with Windows paths. Python `resolve_output_folder` prioritizes that explicit argument, then the standalone script setting, then Desktop/BKID_Captures. Capture failures do not fall back to a different directory. Filename generation, alpha/crop verification and same-directory temporary-file handling are unchanged. The installer cleans up the new x1 runner along with the other extracted scripts; it does not manage selected output folders or PNG files. The toolbar binding revision and RUI remain unchanged, so this feature does not require another toolbar refresh.
-
-API evidence: the official RhinoCommon 6.0.18016.23451 NuGet SDK's Eto.xml documents `SelectFolderDialog.Title`, `Directory`, `CommonDialog.ShowDialog(Window)`, and `Label.Wrap`; these calls compile against the bundled Eto 2.3 assembly. Attempts to fetch the corresponding upstream Eto source returned HTTP 404/403, so no upstream implementation code was reused. Existing native plugin settings and modal ownership patterns were reviewed in this repository. Tests execute the actual generated runners with all four scales, Korean/space/quote/Windows/UNC paths, selected-directory output, unchanged defaults and invalid inputs. Python checks folder precedence and default compatibility. The actual Windows picker, settings persistence in Rhino 6/8 and rendered PNG output remain unexecuted in this Linux environment.
+Left/right hover descriptions now contain only their respective action, not the same combined sentence. New description macro IDs (`capture-hover-v2`, `resolution-hover-v2`) avoid retaining older cached macro text. The migration recognizes the prior capture ID and command-based copied buttons, rebinds those buttons to the new description macros and preserves their capture actions, toolbar/button/group IDs, docking and unrelated buttons. Unused legacy macro definitions are left intact for other references. The binding revision is `distinct-hover-3`. This intentionally replaces description-macro identities; older notes about retaining those identities describe previous releases.

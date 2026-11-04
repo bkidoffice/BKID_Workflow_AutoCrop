@@ -85,7 +85,7 @@ class InstallerTests(unittest.TestCase):
             GetFolderPath=lambda unused: self.temp.name), PlatformID=SimpleNamespace(Win32NT=1))
         rhino = SimpleNamespace(RhinoApp=SimpleNamespace(Version=SimpleNamespace(Major=8), WriteLine=self.log.append, ToolbarFiles=self.host))
         self.mods = {'System': system, 'Rhino': rhino, 'rhinoscriptsyntax': self.host}
-        self.module = load(ROOT / 'Install_BKID_AutoCrop.py')
+        self.module = load(ROOT / 'dist/Install_BKID_AutoCrop.py')
         self.module.show_logo_window = Mock(side_effect=RuntimeError('UI unavailable'))
 
     def install(self):
