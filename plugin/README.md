@@ -1,4 +1,4 @@
-# Native toolbar and deletion-first installer — 2.4.1
+# Native toolbar and deletion-first installer — 2.4.2
 
 ## Build
 
@@ -10,7 +10,7 @@ python3 tools/build_rhi.py
 
 An SDK outside PATH can be passed with `--dotnet /path/to/dotnet`. Locked dependencies compile a RhinoCommon 6.0.18016.23451 / .NET Framework 4.5 RHP and an x64 Windows setup EXE. The builder verifies metadata, embedded capture/logo/image bytes, RHI contents and shared managed-file deletion tests. `python3 -m unittest discover -s tests -v` additionally runs legacy installer and native RUI checks (Pillow required).
 
-Outputs: `installers/BKID_AutoCrop_Setup_2.4.1.exe` and `installers/BKID_AutoCrop_2.4.1.rhi`. Host SDK DLLs are not distributed. The EXE is not Authenticode signed; a previously reported security-product threat detection remains undiagnosed.
+Outputs: `installers/BKID_AutoCrop_Setup_2.4.2.exe` and `installers/BKID_AutoCrop_2.4.2.rhi`. Host SDK DLLs are not distributed. The EXE is not Authenticode signed; a previously reported security-product threat detection remains undiagnosed.
 
 ## Deletion-first setup
 
@@ -66,4 +66,14 @@ Binary metadata comparison confirmed that 2.3.1 referenced RhinoCommon/Rhino.UI 
 
 The former wrapper threw immediately on nonzero Rhino Installer exits, before checking output files. It now verifies output after every exit, including 403. Registered plugin paths are checked first, then the standard user plugin tree, with bounded retries for delayed copies. Tests use the actual verification class to cover 403 with valid output, zero with missing/old output, delayed valid output, and changed RUI layout/schema. This fixes false error reporting without calling an unverified installation successful. Windows Installer execution remains untested here.
 
-Left/right hover descriptions now contain only their respective action, not the same combined sentence. New description macro IDs (`capture-hover-v2`, `resolution-hover-v2`) avoid retaining older cached macro text. The migration recognizes the prior capture ID and command-based copied buttons, rebinds those buttons to the new description macros and preserves their capture actions, toolbar/button/group IDs, docking and unrelated buttons. Unused legacy macro definitions are left intact for other references. The binding revision is `distinct-hover-3`. This intentionally replaces description-macro identities; older notes about retaining those identities describe previous releases.
+Left/right hover descriptions now contain only their respective action, not the same combined sentence. New description macro IDs (`capture-hover-v2`, `resolution-hover-v2`) avoid retaining older cached macro text. The migration recognizes the prior capture ID and command-based copied buttons, rebinds those buttons to the new description macros and preserves their capture actions, toolbar/button/group IDs, docking and unrelated buttons. Unused legacy macro definitions are left intact for other references. That release used binding revision `distinct-hover-3`. This intentionally replaces description-macro identities; older notes about retaining those identities describe previous releases.
+
+## 2.4.2: one first-run toolbar
+
+The previous implementation could open the installed-path RUI even after Rhino had auto-loaded a user UI copy under a different path. It also called Visible=true on already-visible groups, including after RUI refresh. A UI operation can pump nested Idle callbacks before the initialized flag is saved.
+
+The native adapter now passes loaded collection/group identities to the shared ToolbarDisplay policy. It reuses a matching loaded group by ID, prefers docking, opens only if no matching collection exists, defers an unfinished import instead of opening again, and sets visibility only when necessary. The idle callback uses StartupGate to block reentry. A fresh, already-correct RUI skips the refresh close/open cycle; existing installations still get one binding-revision refresh, whose visibility restoration also skips no-op setters.
+
+Dedicated duplicate collections with this plugin's file/group IDs are saved and closed; in shared collections only the duplicate owned group is hidden. Steady-state startup cleanup neither opens absent collections nor forces hidden groups visible. User docking/layout remains owned by Rhino. Manual BKIDAutoCrop still shows a hidden toolbar on demand.
+
+The actual display policy and reentry gate are linked into TestToolbar. A fake host counts imports/show requests and simulates Open pumping another idle event. Tests cover auto-loaded identity reuse from a different path, repeated show, one fresh import, hidden/docked handling, scoped duplicate cleanup, no resurrection of closed UI, incomplete-import deferral and reentry. Native Windows Rhino UI behavior remains unexecuted here.

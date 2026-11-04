@@ -9,7 +9,7 @@ namespace BKID.AutoCrop
 {
     internal static class ToolbarRefresh
     {
-        internal static int Apply(string templatePath)
+        internal static int Apply(string templatePath, bool forceReload)
         {
             int refreshed = 0;
             string template = File.ReadAllText(templatePath);
@@ -25,7 +25,10 @@ namespace BKID.AutoCrop
                 if (File.Exists(path) && !ToolbarBindings.ContainsCaptureButton(File.ReadAllText(path), template)) continue;
                 if (!file.Save()) throw new IOException("Cannot save toolbar layout before updating AutoCrop: " + path);
                 string original = File.ReadAllText(path);
-                string updated = ToolbarBindings.Patch(original, template) ?? original;
+                string patched = ToolbarBindings.Patch(original, template);
+                // A fresh, correct auto-loaded toolbar does not need a close/open cycle.
+                if (patched == null && !forceReload) continue;
+                string updated = patched ?? original;
                 var visibility = new Dictionary<Guid, bool>();
                 for (int i = 0; i < file.GroupCount; i++)
                 {
@@ -64,7 +67,7 @@ namespace BKID.AutoCrop
             {
                 var group = restored.GetGroup(i);
                 bool visible;
-                if (visibility.TryGetValue(group.Id, out visible)) group.Visible = visible;
+                if (visibility.TryGetValue(group.Id, out visible) && group.Visible != visible) group.Visible = visible;
             }
         }
 

@@ -41,7 +41,7 @@ namespace BKID.AutoCrop.Setup
         private bool busy;
         public SetupWindow()
         {
-            Text = "BKID Workflowboost 2.4.1 설치";
+            Text = "BKID Workflowboost 2.4.2 설치";
             ClientSize = new Size(760, 420);
             Padding = new Padding(0);
             FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -165,7 +165,7 @@ namespace BKID.AutoCrop.Setup
 
         private void Install(string temporary, bool replacementAllowed)
         {
-            string package = Path.Combine(temporary, "BKID_AutoCrop_2.4.1.rhi");
+            string package = Path.Combine(temporary, "BKID_AutoCrop_2.4.2.rhi");
             using (var input = Assembly.GetExecutingAssembly().GetManifestResourceStream("BKID.Setup.Package.rhi"))
             using (var output = File.Create(package)) input.CopyTo(output);
             byte[] expectedPlugin;
@@ -204,7 +204,7 @@ namespace BKID.AutoCrop.Setup
             foreach (var version in new[] { "6", "8" })
             foreach (var name in new[] { "BKID_AutoCrop.py", "Show_AutoCrop.py", "BKID_AutoCrop.rui", "assets/BKID_AutoCrop_Icon.svg", "assets/icon_32.png" })
                 files.Add(Path.Combine(roaming, "BKID", "AutoCrop", "Rhino" + version, name.Replace('/', Path.DirectorySeparatorChar)));
-            foreach (var version in new[] { "2.0.0", "2.1.0", "2.2.0", "2.3.0", "2.3.1", "2.4.0", "2.4.1" })
+            foreach (var version in new[] { "2.0.0", "2.1.0", "2.2.0", "2.3.0", "2.3.1", "2.4.0", "2.4.1", "2.4.2" })
             foreach (var name in new[] { "BKID_AutoCrop.py", "BKID_AutoCrop_x2.py", "BKID_AutoCrop_x3.py", "BKID_AutoCrop_x4.py" })
                 files.Add(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BKID", "AutoCrop", "runtime", version, name));
             managed.Validate(files);

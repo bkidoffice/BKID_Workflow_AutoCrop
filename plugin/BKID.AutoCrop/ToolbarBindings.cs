@@ -27,6 +27,11 @@ namespace BKID.AutoCrop
             return new Guid((string)Read(template).Root.Attribute("guid"));
         }
 
+        internal static Guid GroupId(string template)
+        {
+            return new Guid((string)Read(template).Root.Element("tool_bar_groups").Element("tool_bar_group").Attribute("guid"));
+        }
+
         internal static bool ContainsCaptureButton(string current, string template)
         {
             var document = Read(current);

@@ -13,9 +13,10 @@ namespace BKID.AutoCrop
     [Guid("3881C10B-30A8-4FE5-BB48-9E53A6FEA1F4")]
     public sealed class AutoCropPlugin : PlugIn
     {
-        private const string BindingRevision = "distinct-hover-3";
+        private const string BindingRevision = "single-toolbar-4";
         private const string BindingRevisionKey = "ToolbarBindingRevision";
         private const string ToolbarInitializedKey = "NativeToolbarInitialized";
+        private readonly StartupGate startupGate = new StartupGate();
         private bool waitingForStartup;
         private int startupAttempts;
         public static AutoCropPlugin Instance { get; private set; }
@@ -37,39 +38,45 @@ namespace BKID.AutoCrop
 
         private void OnStartupIdle(object sender, EventArgs e)
         {
-            // AtStartup can run before Rhino has a document and an owner window.
-            if (RhinoDoc.ActiveDoc == null || RhinoApp.MainWindowHandle() == IntPtr.Zero) return;
-            startupAttempts++;
+            if (!waitingForStartup || !startupGate.TryEnter()) return;
             try
             {
-                if (startupAttempts == 1)
+                // AtStartup can run before Rhino has a document and an owner window.
+                if (RhinoDoc.ActiveDoc == null || RhinoApp.MainWindowHandle() == IntPtr.Zero) return;
+                startupAttempts++;
+                try
                 {
-                    try { RemoveLegacyRegistration(); }
-                    catch (Exception legacyError) { RhinoApp.WriteLine("AutoCrop legacy cleanup: " + legacyError); }
-                }
-                if (Settings.GetString(BindingRevisionKey, "") != BindingRevision)
-                {
-                    try { RefreshToolbarBindings(); }
-                    catch (Exception refreshError)
+                    if (startupAttempts == 1)
                     {
-                        // An optional saved-toolbar migration must not block first display.
-                        RhinoApp.WriteLine("AutoCrop saved-toolbar refresh: " + refreshError);
-                        RhinoApp.WriteLine("Run BKIDAutoCropRefresh to retry the saved-toolbar update.");
+                        try { RemoveLegacyRegistration(); }
+                        catch (Exception legacyError) { RhinoApp.WriteLine("AutoCrop legacy cleanup: " + legacyError); }
+                    }
+                    if (Settings.GetString(BindingRevisionKey, "") != BindingRevision)
+                    {
+                        try { RefreshToolbarBindings(Settings.GetBool(ToolbarInitializedKey, false)); }
+                        catch (Exception refreshError)
+                        {
+                            // An optional saved-toolbar migration must not block first display.
+                            RhinoApp.WriteLine("AutoCrop saved-toolbar refresh: " + refreshError);
+                            RhinoApp.WriteLine("Run BKIDAutoCropRefresh to retry the saved-toolbar update.");
+                        }
+                    }
+                    if (!Settings.GetBool(ToolbarInitializedKey, false)) ShowToolbar();
+                    else ConsolidateToolbars();
+                    StopWaitingForStartup();
+                }
+                catch (Exception error)
+                {
+                    // Rhino 8 may finish importing a sidecar on a later UI idle cycle.
+                    if (startupAttempts >= 5)
+                    {
+                        StopWaitingForStartup();
+                        RhinoApp.WriteLine("BKID AutoCrop toolbar startup: " + error);
+                        RhinoApp.WriteLine("Run BKIDAutoCrop to retry opening the toolbar.");
                     }
                 }
-                if (!Settings.GetBool(ToolbarInitializedKey, false)) ShowToolbar();
-                StopWaitingForStartup();
             }
-            catch (Exception error)
-            {
-                // Rhino 8 may finish importing a sidecar on a later UI idle cycle.
-                if (startupAttempts >= 5)
-                {
-                    StopWaitingForStartup();
-                    RhinoApp.WriteLine("BKID AutoCrop toolbar startup: " + error);
-                    RhinoApp.WriteLine("Run BKIDAutoCrop to retry opening the toolbar.");
-                }
-            }
+            finally { startupGate.Exit(); }
         }
 
         private void StopWaitingForStartup()
@@ -95,29 +102,29 @@ namespace BKID.AutoCrop
             if (old != null) old.Close(false);
         }
 
-        internal void RefreshToolbarBindings()
+        internal void RefreshToolbarBindings(bool forceReload = true)
         {
             var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "BKID.AutoCrop.rui");
-            int refreshed = ToolbarRefresh.Apply(path);
+            int refreshed = ToolbarRefresh.Apply(path, forceReload);
             RhinoApp.WriteLine("AutoCrop toolbar binding refresh: " + refreshed + " collection(s).");
             Settings.SetString(BindingRevisionKey, BindingRevision);
+        }
+
+        private void ConsolidateToolbars()
+        {
+            var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "BKID.AutoCrop.rui");
+            string template = File.ReadAllText(path);
+            ToolbarDisplay.Show(new RhinoToolbarDisplayHost(), path,
+                ToolbarBindings.CollectionId(template), ToolbarBindings.GroupId(template), false);
         }
 
         internal void ShowToolbar()
         {
             var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "BKID.AutoCrop.rui");
             if (!File.Exists(path)) throw new FileNotFoundException("Reinstall BKID AutoCrop: toolbar sidecar missing.", path);
-            var toolbar = RhinoApp.ToolbarFiles.FindByPath(path) ?? RhinoApp.ToolbarFiles.Open(path);
-            if (toolbar == null) throw new InvalidOperationException("Rhino could not open toolbar: " + path);
-            var group = toolbar.GetGroup("BKID Workflowboost");
-            if (group == null)
-            {
-                var names = new System.Collections.Generic.List<string>();
-                for (int i = 0; i < toolbar.GroupCount; i++) names.Add(toolbar.GetGroup(i).Name);
-                throw new InvalidOperationException("BKID AutoCrop toolbar group unavailable; groups: " + string.Join(", ", names));
-            }
-            group.Visible = true;
-            if (!group.Visible) throw new InvalidOperationException("Rhino did not display the AutoCrop toolbar group.");
+            string template = File.ReadAllText(path);
+            ToolbarDisplay.Show(new RhinoToolbarDisplayHost(), path,
+                ToolbarBindings.CollectionId(template), ToolbarBindings.GroupId(template));
             // Mark only successful initialization; failed first starts can retry.
             Settings.SetBool(ToolbarInitializedKey, true);
             StopWaitingForStartup();
@@ -127,7 +134,7 @@ namespace BKID.AutoCrop
         {
             if (scale < 1 || scale > 4) throw new ArgumentOutOfRangeException("scale");
             var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                                      "BKID", "AutoCrop", "runtime", "2.4.1");
+                                      "BKID", "AutoCrop", "runtime", "2.4.2");
             Directory.CreateDirectory(folder);
             var target = Path.Combine(folder, "BKID_AutoCrop.py");
             using (var input = Assembly.GetExecutingAssembly().GetManifestResourceStream("BKID.AutoCrop.Capture.py"))
