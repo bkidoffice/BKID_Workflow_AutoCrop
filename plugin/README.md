@@ -1,4 +1,4 @@
-# Native toolbar and deletion-first installer — 2.5.2
+# Native toolbar and deletion-first installer — 2.5.3
 
 ## Build
 
@@ -10,7 +10,7 @@ python3 tools/build_rhi.py
 
 An SDK outside PATH can be passed with `--dotnet /path/to/dotnet`. Locked dependencies compile a RhinoCommon 6.0.18016.23451 / .NET Framework 4.5 RHP and an x64 Windows setup EXE. The builder verifies metadata, embedded capture/logo/image bytes, RHI contents and shared managed-file deletion tests. `python3 -m unittest discover -s tests -v` additionally runs legacy installer and native RUI checks (Pillow required).
 
-Outputs: `installers/BKID_AutoCrop_Setup_2.5.2.exe` and `installers/BKID_AutoCrop_2.5.2.rhi`. Host SDK DLLs are not distributed. The EXE is not Authenticode signed; a previously reported security-product threat detection remains undiagnosed.
+Outputs: `installers/BKID_AutoCrop_Setup_2.5.3.exe` and `installers/BKID_AutoCrop_2.5.3.rhi`. Host SDK DLLs are not distributed. The EXE is not Authenticode signed; a previously reported security-product threat detection remains undiagnosed.
 
 ## Deletion-first setup
 
@@ -76,3 +76,6 @@ Left/right hover descriptions now contain only their respective action, not the 
 
 
 2.5.2: 캡처 가장자리 감지 시 오류 추적 대신 “Display 패널에서 Z축(Z axis)을 끄고 다시 시도해 주세요.”를 표시하고 저장 없이 종료합니다. 저장 폴더 설정 기능은 유지합니다.
+
+
+2.5.3: Z-axis guidance is now ASCII English: "Turn off Z axis in the Display panel, then try again."

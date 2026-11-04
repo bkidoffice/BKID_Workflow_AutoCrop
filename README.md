@@ -13,7 +13,7 @@ Windows Rhino의 실제 **BKID Workflowboost** 툴바에서 로고 버튼으로 
 
 ## 설치 / 다시 설치 — 2.4
 
-1. [설치 프로그램 다운로드 (.exe)](https://github.com/bkidoffice/BKID_Workflow_AutoCrop/raw/refs/heads/main/installers/BKID_AutoCrop_Setup_2.5.2.exe)
+1. [설치 프로그램 다운로드 (.exe)](https://github.com/bkidoffice/BKID_Workflow_AutoCrop/raw/refs/heads/main/installers/BKID_AutoCrop_Setup_2.5.3.exe)
 2. Rhino를 모두 종료하고 실행 → **설치 / 다시 설치**
 3. 기존 설치가 있으면 **“설치되어 있습니다. 삭제하고 다시 설치할까요?”**에 예/아니요 선택
 4. 예를 선택했거나 처음 설치하는 경우, 이어지는 Rhino Installer에서 **현재 사용자 설치** 완료
@@ -40,3 +40,6 @@ Windows Rhino의 실제 **BKID Workflowboost** 툴바에서 로고 버튼으로 
 
 
 2.5.2: 캡처 가장자리 감지 시 오류 추적 대신 “Display 패널에서 Z축(Z axis)을 끄고 다시 시도해 주세요.”를 표시하고 저장 없이 종료합니다. 저장 폴더 설정 기능은 유지합니다.
+
+
+2.5.3: Z-axis guidance is now ASCII English: "Turn off Z axis in the Display panel, then try again."

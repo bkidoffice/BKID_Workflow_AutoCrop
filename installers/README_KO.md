@@ -1,7 +1,7 @@
-# BKID Workflowboost 2.5.2 설치
+# BKID Workflowboost 2.5.3 설치
 
 1. Rhino를 모두 종료합니다.
-2. `BKID_AutoCrop_Setup_2.5.2.exe` 실행 → **설치 / 다시 설치**
+2. `BKID_AutoCrop_Setup_2.5.3.exe` 실행 → **설치 / 다시 설치**
 3. 기존 설치가 있으면 **“설치되어 있습니다. 삭제하고 다시 설치할까요?”**가 표시됩니다. **예**일 때만 삭제·재설치를 진행합니다. **아니요**면 기존 설치를 유지합니다.
 4. 처음 설치하거나 예를 선택했다면 Rhino Installer에서 **현재 사용자 설치**를 완료합니다.
 
@@ -57,3 +57,6 @@ Rhino 6/8 실제 실행은 이 Linux 환경에서 확인하지 못했습니다. 
 
 
 2.5.2: 캡처 가장자리 감지 시 오류 추적 대신 “Display 패널에서 Z축(Z axis)을 끄고 다시 시도해 주세요.”를 표시하고 저장 없이 종료합니다. 저장 폴더 설정 기능은 유지합니다.
+
+
+2.5.3: Z-axis guidance is now ASCII English: "Turn off Z axis in the Display panel, then try again."

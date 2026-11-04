@@ -202,7 +202,7 @@ def run(capture_scale=None, output_folder=None):
             raise RuntimeError(u"저장할 픽셀이 없습니다. 오브젝트의 표시 상태를 확인해 주세요.")
         if touches_frame(bounds, source.Width, source.Height):
             Rhino.RhinoApp.WriteLine(
-                u"Display 패널에서 Z축(Z axis)을 끄고 다시 시도해 주세요.")
+                u"Turn off Z axis in the Display panel, then try again.")
             return None
         left, top, right, bottom = bounds
         width, height = output_size(bounds)
