@@ -201,9 +201,9 @@ def run(capture_scale=None, output_folder=None):
         if bounds is None:
             raise RuntimeError(u"저장할 픽셀이 없습니다. 오브젝트의 표시 상태를 확인해 주세요.")
         if touches_frame(bounds, source.Width, source.Height):
-            raise RuntimeError(
-                u"픽셀이 캡처 가장자리에 닿았습니다. 조금 축소한 후 다시 실행해 주세요. "
-                u"배경이 불투명하게 나오는 표시 모드나 바닥면도 확인해 주세요.")
+            Rhino.RhinoApp.WriteLine(
+                u"Display 패널에서 Z축(Z axis)을 끄고 다시 시도해 주세요.")
+            return None
         left, top, right, bottom = bounds
         width, height = output_size(bounds)
         cropped = source.Clone(Rectangle(left, top, right-left+1, bottom-top+1),

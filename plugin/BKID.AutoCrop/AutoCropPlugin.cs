@@ -155,7 +155,7 @@ namespace BKID.AutoCrop
         {
             if (scale < 1 || scale > 4) throw new ArgumentOutOfRangeException("scale");
             var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                                      "BKID", "AutoCrop", "runtime", "2.5.1");
+                                      "BKID", "AutoCrop", "runtime", "2.5.2");
             Directory.CreateDirectory(folder);
             var target = Path.Combine(folder, "BKID_AutoCrop.py");
             using (var input = Assembly.GetExecutingAssembly().GetManifestResourceStream("BKID.AutoCrop.Capture.py"))
