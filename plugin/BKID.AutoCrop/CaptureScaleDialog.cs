@@ -1,3 +1,4 @@
+using System;
 using Eto.Drawing;
 using Eto.Forms;
 
@@ -5,12 +6,29 @@ namespace BKID.AutoCrop
 {
     internal sealed class CaptureScaleDialog : Dialog<int>
     {
-        internal CaptureScaleDialog(int viewportWidth, int viewportHeight)
+        internal CaptureScaleDialog(int viewportWidth, int viewportHeight, AutoCropPlugin plugin)
         {
-            Title = "AutoCrop 해상도 선택";
+            Title = "AutoCrop 해상도 · 저장 폴더";
             Resizable = false;
             Padding = new Padding(16);
             var layout = new DynamicLayout { Spacing = new Size(8, 8) };
+            var folder = new Label { Text = "저장 폴더: " + plugin.CaptureOutputFolder, Width = 420, Wrap = WrapMode.Word };
+            layout.AddRow(folder);
+            var changeFolder = new Button { Text = "저장 폴더 변경…" };
+            changeFolder.Click += (sender, args) =>
+            {
+                try
+                {
+                    plugin.ChooseCaptureOutputFolder(this);
+                    folder.Text = "저장 폴더: " + plugin.CaptureOutputFolder;
+                }
+                catch (Exception error)
+                {
+                    MessageBox.Show(this, "저장 폴더를 변경하지 못했습니다.\n" + error.Message, "BKID AutoCrop");
+                }
+            };
+            layout.AddRow(changeFolder);
+            layout.AddRow(new Label { Text = "변경한 폴더는 이후 좌클릭·우클릭 캡처에도 적용됩니다." });
             layout.AddRow(new Label { Text = "캡처 배율을 선택하세요." });
             foreach (int factor in new[] { 2, 3, 4 })
             {

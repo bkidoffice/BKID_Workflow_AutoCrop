@@ -1,4 +1,4 @@
-# Native toolbar and deletion-first installer — 2.4.3
+# Native toolbar and deletion-first installer — 2.5.1
 
 ## Build
 
@@ -10,7 +10,7 @@ python3 tools/build_rhi.py
 
 An SDK outside PATH can be passed with `--dotnet /path/to/dotnet`. Locked dependencies compile a RhinoCommon 6.0.18016.23451 / .NET Framework 4.5 RHP and an x64 Windows setup EXE. The builder verifies metadata, embedded capture/logo/image bytes, RHI contents and shared managed-file deletion tests. `python3 -m unittest discover -s tests -v` additionally runs legacy installer and native RUI checks (Pillow required).
 
-Outputs: `installers/BKID_AutoCrop_Setup_2.4.3.exe` and `installers/BKID_AutoCrop_2.4.3.rhi`. Host SDK DLLs are not distributed. The EXE is not Authenticode signed; a previously reported security-product threat detection remains undiagnosed.
+Outputs: `installers/BKID_AutoCrop_Setup_2.5.1.exe` and `installers/BKID_AutoCrop_2.5.1.rhi`. Host SDK DLLs are not distributed. The EXE is not Authenticode signed; a previously reported security-product threat detection remains undiagnosed.
 
 ## Deletion-first setup
 
@@ -70,3 +70,6 @@ Left/right hover descriptions now contain only their respective action, not the 
 
 
 2.4.3: 2.4.1 기반으로 캡처 중 작업평면 Z축 표시를 숨겨 가장자리 판정에서 제외합니다. 성공·실패 후 원래 축 표시 상태를 복구합니다. 실제 Windows Rhino 실행은 미검증입니다.
+
+
+2.5.1: 툴바 우클릭 → **저장 폴더 변경…**에서 PNG 저장 폴더를 지정합니다. `BKIDAutoCropFolder` 명령으로도 변경할 수 있습니다. 선택한 폴더는 Rhino 사용자 설정에 저장되어 재시작 후에도 좌클릭 1배·우클릭 모든 배율에 적용됩니다. 폴더 선택 취소는 기존 경로를 유지합니다. 폴더만 바꾸려면 배율을 고르지 않고 창을 닫으세요. Z축 캡처 제외 수정도 유지합니다. 실제 Rhino UI는 미검증입니다.

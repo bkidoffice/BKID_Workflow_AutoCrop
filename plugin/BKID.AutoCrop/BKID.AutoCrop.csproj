@@ -4,7 +4,7 @@
     <TargetExt>.rhp</TargetExt>
     <AssemblyName>BKID.AutoCrop</AssemblyName>
     <RootNamespace>BKID.AutoCrop</RootNamespace>
-    <Version>2.4.3</Version>
+    <Version>2.5.1</Version>
     <AssemblyTitle>BKID AutoCrop</AssemblyTitle>
     <Description>Transparent viewport capture with an native BKID toolbar.</Description>
     <Company>BKID</Company>
